@@ -30,7 +30,7 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXV
 # 飞书配置
 FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "cli_a91d6af2fd385bef")
 FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "LeOI7zVz5v02dRhGGfVeDej8DwKh1WvB")
-FEISHU_CHAT_ID = os.environ.get("FEISHU_CHAT_ID", "oc_c9c448dfa5d7922fb2dec7b9b10c2144")  # 集团群
+FEISHU_CHAT_ID = os.environ.get("FEISHU_CHAT_ID", "oc_123fc3961f8f42051abeddd78760f4c1")  # 国兴超链新闻组
 FEISHU_API = "https://open.feishu.cn"
 
 BJT = timezone(timedelta(hours=8))
