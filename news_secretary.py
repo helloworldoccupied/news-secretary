@@ -28,8 +28,8 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://dmdicqhkjefxethauypp.supa
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZGljcWhramVmeGV0aGF1eXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMTMyMiwiZXhwIjoyMDg1Mzg3MzIyfQ.hAbf2cC97-iLsmplti_S1HjnKS0h7nbs9plmkKqlMsc")
 
 # 飞书配置
-FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "cli_a91d6af2fd385bef")
-FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "LeOI7zVz5v02dRhGGfVeDej8DwKh1WvB")
+FEISHU_APP_ID = os.environ.get("FEISHU_APP_ID", "cli_a91d4284fdb8dbd1")
+FEISHU_APP_SECRET = os.environ.get("FEISHU_APP_SECRET", "c5Ay0goMYhmVIEi6MGJfdl4Q21eH8raO")
 FEISHU_CHAT_ID = os.environ.get("FEISHU_CHAT_ID", "oc_123fc3961f8f42051abeddd78760f4c1")  # 国兴超链新闻组
 FEISHU_API = "https://open.feishu.cn"
 
