@@ -106,14 +106,14 @@ def parse_pub_date(date_str):
     # 2) ISO 8601 格式（Atom 的 <published>/<updated>）
     try:
         # 处理带Z结尾的UTC时间
-        s = date_str.replace("Z", "+00:00")
-        return datetime.fromisoformat(s)
+        iso_str = date_str.replace("Z", "+00:00")
+        return datetime.fromisoformat(iso_str)
     except Exception:
         pass
     # 3) 常见变体：2024-05-27 12:00:00
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y/%m/%d %H:%M:%S"):
         try:
-            dt = datetime.strptime(s, fmt)
+            dt = datetime.strptime(date_str, fmt)
             return dt.replace(tzinfo=timezone.utc)
         except Exception:
             pass
@@ -126,6 +126,7 @@ def fetch_rss(name, url, max_items=10):
     """通用RSS采集，支持RSS 2.0和Atom，过滤超过48小时的旧文章"""
     news = []
     filtered_old = 0
+    no_date_count = 0
     now = datetime.now(timezone.utc)
     try:
         resp = requests.get(url, timeout=8, headers=UA)
@@ -145,6 +146,8 @@ def fetch_rss(name, url, max_items=10):
                 if pub_dt and (now - pub_dt).total_seconds() > MAX_AGE_HOURS * 3600:
                     filtered_old += 1
                     continue
+                if not pub_dt and pub_str:
+                    no_date_count += 1
                 title = (item.findtext("atom:title", "", ns)).strip()
                 link_el = item.find("atom:link", ns)
                 link = link_el.get("href", "") if link_el is not None else ""
@@ -153,13 +156,18 @@ def fetch_rss(name, url, max_items=10):
                 if title and len(news) < max_items:
                     news.append({"title": title, "source": name, "link": link, "desc": desc})
         else:
+            # Dublin Core 命名空间（部分RSS使用 <dc:date> 代替 <pubDate>）
+            dc_ns = {"dc": "http://purl.org/dc/elements/1.1/"}
             for item in items[:max_items * 2]:  # 多取一些，因为可能过滤掉旧的
-                # 日期过滤
-                pub_str = (item.findtext("pubDate") or item.findtext("dc:date") or "").strip()
+                # 日期过滤：优先 pubDate，其次 dc:date
+                pub_str = (item.findtext("pubDate") or
+                           item.findtext("dc:date", None, dc_ns) or "").strip()
                 pub_dt = parse_pub_date(pub_str)
                 if pub_dt and (now - pub_dt).total_seconds() > MAX_AGE_HOURS * 3600:
                     filtered_old += 1
                     continue
+                if not pub_dt and pub_str:
+                    no_date_count += 1
                 title = (item.findtext("title") or "").strip()
                 link = (item.findtext("link") or "").strip()
                 desc = (item.findtext("description") or "").strip()
@@ -170,6 +178,8 @@ def fetch_rss(name, url, max_items=10):
         print(f"  [RSS {name}] {e}")
     if filtered_old > 0:
         print(f"  [RSS {name}] 过滤掉 {filtered_old} 条超过{MAX_AGE_HOURS}小时的旧文章")
+    if no_date_count > 0:
+        print(f"  [RSS {name}] WARNING: {no_date_count} 条文章日期解析失败，已保留")
     return news
 
 
