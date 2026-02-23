@@ -90,10 +90,43 @@ RSS_SOURCES = [
     {"name": "X-Crypto热点", "url": "https://news.google.com/rss/search?q=site:x.com+OR+site:twitter.com+bitcoin+OR+crypto+OR+BTC&hl=en-US&gl=US&ceid=US:en", "category": "crypto", "max": 8},
 ]
 
+# ========== 日期解析工具 ==========
+from email.utils import parsedate_to_datetime
+
+def parse_pub_date(date_str):
+    """解析RSS/Atom的日期字段，返回datetime(aware)或None"""
+    if not date_str or not date_str.strip():
+        return None
+    date_str = date_str.strip()
+    # 1) RFC 2822 格式（RSS 2.0 的 <pubDate>）
+    try:
+        return parsedate_to_datetime(date_str)
+    except Exception:
+        pass
+    # 2) ISO 8601 格式（Atom 的 <published>/<updated>）
+    try:
+        # 处理带Z结尾的UTC时间
+        s = date_str.replace("Z", "+00:00")
+        return datetime.fromisoformat(s)
+    except Exception:
+        pass
+    # 3) 常见变体：2024-05-27 12:00:00
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y/%m/%d %H:%M:%S"):
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+    return None
+
+MAX_AGE_HOURS = 48  # 只收录48小时内的文章
+
 # ========== RSS通用采集器 ==========
 def fetch_rss(name, url, max_items=10):
-    """通用RSS采集，支持RSS 2.0和Atom"""
+    """通用RSS采集，支持RSS 2.0和Atom，过滤超过48小时的旧文章"""
     news = []
+    filtered_old = 0
+    now = datetime.now(timezone.utc)
     try:
         resp = requests.get(url, timeout=8, headers=UA)
         resp.encoding = resp.apparent_encoding
@@ -104,24 +137,39 @@ def fetch_rss(name, url, max_items=10):
         if not items:
             ns = {"atom": "http://www.w3.org/2005/Atom"}
             items = root.findall(".//atom:entry", ns)
-            for item in items[:max_items]:
+            for item in items[:max_items * 2]:  # 多取一些，因为可能过滤掉旧的
+                # 日期过滤
+                pub_str = (item.findtext("atom:published", "", ns) or
+                           item.findtext("atom:updated", "", ns) or "").strip()
+                pub_dt = parse_pub_date(pub_str)
+                if pub_dt and (now - pub_dt).total_seconds() > MAX_AGE_HOURS * 3600:
+                    filtered_old += 1
+                    continue
                 title = (item.findtext("atom:title", "", ns)).strip()
                 link_el = item.find("atom:link", ns)
                 link = link_el.get("href", "") if link_el is not None else ""
                 desc = (item.findtext("atom:summary", "", ns) or item.findtext("atom:content", "", ns) or "").strip()
                 desc = re.sub(r'<[^>]+>', '', desc)[:300]
-                if title:
+                if title and len(news) < max_items:
                     news.append({"title": title, "source": name, "link": link, "desc": desc})
         else:
-            for item in items[:max_items]:
+            for item in items[:max_items * 2]:  # 多取一些，因为可能过滤掉旧的
+                # 日期过滤
+                pub_str = (item.findtext("pubDate") or item.findtext("dc:date") or "").strip()
+                pub_dt = parse_pub_date(pub_str)
+                if pub_dt and (now - pub_dt).total_seconds() > MAX_AGE_HOURS * 3600:
+                    filtered_old += 1
+                    continue
                 title = (item.findtext("title") or "").strip()
                 link = (item.findtext("link") or "").strip()
                 desc = (item.findtext("description") or "").strip()
                 desc = re.sub(r'<[^>]+>', '', desc)[:300]
-                if title:
+                if title and len(news) < max_items:
                     news.append({"title": title, "source": name, "link": link, "desc": desc})
     except Exception as e:
         print(f"  [RSS {name}] {e}")
+    if filtered_old > 0:
+        print(f"  [RSS {name}] 过滤掉 {filtered_old} 条超过{MAX_AGE_HOURS}小时的旧文章")
     return news
 
 
