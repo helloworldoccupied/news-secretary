@@ -1,0 +1,23 @@
+name: One-time DB setup
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Create daily_intelligence table
+        env:
+          SUPABASE_MGMT_KEY: ${{ secrets.SUPABASE_MGMT_KEY }}
+        run: |
+          python3 -c "
+          import urllib.request, json
+          key = '${{ secrets.SUPABASE_MGMT_KEY }}'
+          sql = 'CREATE TABLE IF NOT EXISTS daily_intelligence (id BIGSERIAL PRIMARY KEY, date DATE NOT NULL, report TEXT NOT NULL, news_count INTEGER, created_at TIMESTAMPTZ DEFAULT NOW());'
+          url = 'https://api.supabase.com/v1/projects/dmdicqhkjefxethauypp/database/query'
+          data = json.dumps({'query': sql}).encode()
+          req = urllib.request.Request(url, data=data, headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'})
+          resp = urllib.request.urlopen(req, timeout=30)
+          print(resp.read().decode()[:500])
+          "
