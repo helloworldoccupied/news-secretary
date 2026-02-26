@@ -629,7 +629,18 @@ def build_final_report(analysis, crypto, macro, ashare, news, calendar):
 
     footer = f'\n---\n*{src_ok}源/{total}条新闻 · Claude Sonnet分析 · Daily Intelligence v2.0*'
 
-    return header + '\n' + body + footer
+    # 新闻公司项目状态汇总（董事长每日可见）
+    project_status = '''
+
+---
+## 新闻公司项目状态
+| 项目 | 状态 | 说明 |
+|------|------|------|
+| 每日市场情报 v2.0 | 运行中 | 本条即是，每日08:00自动推送 |
+| IEEE ICTA 2026 Keynote | 已交付 | 28页PPT+演讲稿，待董事长确认 |
+'''
+
+    return header + '\n' + body + footer + project_status
 
 
 # ============================================================
