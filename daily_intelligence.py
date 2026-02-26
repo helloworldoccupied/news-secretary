@@ -637,6 +637,7 @@ def build_final_report(analysis, crypto, macro, ashare, news, calendar):
 | 项目 | 状态 | 说明 |
 |------|------|------|
 | 每日市场情报 v2.0 | 运行中 | 本条即是，每日08:00自动推送 |
+| 审核员Agent v1.0 | 运行中 | 每日09:00自动审核，有问题才告警 |
 | IEEE ICTA 2026 Keynote | 已交付 | 28页PPT+演讲稿，待董事长确认 |
 '''
 
