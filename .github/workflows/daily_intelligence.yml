@@ -1,4 +1,4 @@
-name: 每日市场情报 v1.2
+name: 每日市场情报 v2.0
 
 on:
   schedule:
@@ -21,6 +21,7 @@ jobs:
 
       - name: Run Daily Intelligence
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

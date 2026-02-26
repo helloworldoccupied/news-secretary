@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-每日市场情报系统 v1.2 — Daily Market Intelligence
-数据采集 + 模板化简报 + Server酱推送
+每日市场情报系统 v2.0 — Daily Market Intelligence
+首席分析师（Chief Analyst）· Claude Sonnet 深度分析
 每日08:00 BJT 自动运行（GitHub Actions cron: '0 0 * * *' UTC）
-覆盖: 全球宏观 | 加密货币 | A股市场
+覆盖: 全球宏观 | 加密货币 | A股市场 | 跨市场信号
 推送: Server酱(微信) + Supabase存档
-深度分析: 在Claude Code session中按需进行（无额外API费用）
+LLM: Claude Sonnet (Anthropic API)
 
 替代旧版 news_secretary.py（新闻大秘v3.0）
 """
@@ -30,13 +30,16 @@ if sys.platform == "win32":
 # ============================================================
 # 配置
 # ============================================================
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or \
+    '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'
+ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'
 SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY') or 'SCT314848TkLunKgpZEAAbT1YPYUIHrI4F'
 SUPABASE_URL = os.environ.get('SUPABASE_URL') or 'https://dmdicqhkjefxethauypp.supabase.co'
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or \
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZGljcWhramVmeGV0aGF1eXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMTMyMiwiZXhwIjoyMDg1Mzg3MzIyfQ.hAbf2cC97-iLsmplti_S1HjnKS0h7nbs9plmkKqlMsc'
 
 BJT = timezone(timedelta(hours=8))
-UA = {'User-Agent': 'DailyIntelligence/1.2 (+https://chaoshpc.com)'}
+UA = {'User-Agent': 'DailyIntelligence/2.0 (+https://chaoshpc.com)'}
 MAX_AGE_HOURS = 48
 
 
@@ -399,171 +402,234 @@ def collect_all_news():
 
 
 # ============================================================
-# 模板化简报生成（无需LLM API）
+# 数据上下文构建（给Claude分析用）
 # ============================================================
-def _fmt_price(val, prefix='', suffix='', decimals=0):
-    if val is None:
-        return '—'
-    if decimals == 0:
-        return f'{prefix}{val:,.0f}{suffix}'
-    return f'{prefix}{val:,.{decimals}f}{suffix}'
-
-
-def _fmt_change(val):
-    if val is None:
-        return '—'
-    arrow = '▲' if val > 0 else ('▼' if val < 0 else '—')
-    return f'{arrow} {val:+.2f}%'
-
-
-def build_report(crypto, macro, ashare, news, calendar):
-    """用模板把采集到的数据组装成可读简报（markdown）"""
+def build_data_context(crypto, macro, ashare, news, calendar):
+    """把所有采集数据组装成结构化文本，供Claude分析"""
     now = datetime.now(BJT)
-    L = []  # lines
+    ctx = []
+    ctx.append(f'=== 数据采集时间: {now.strftime("%Y-%m-%d %H:%M")} BJT ===\n')
 
-    L.append(f'# 每日市场数据简报')
-    L.append(f'**{now.strftime("%Y-%m-%d")} 08:00 BJT**')
-    L.append('')
-    L.append('> 数据自动采集，深度分析请在Claude Code session中进行')
-    L.append('')
-    L.append('---')
-
-    # ===== 市场快照 =====
-    L.append('')
-    L.append('## 市场快照')
-    L.append('')
-    L.append('| 资产 | 价格 | 24h变动 |')
-    L.append('|:-----|-----:|-------:|')
-
+    # 加密货币
+    ctx.append('【加密货币市场】')
     if crypto.get('BTC_price'):
-        L.append(f'| BTC | ${crypto["BTC_price"]:,.0f} | {_fmt_change(crypto.get("BTC_change"))} |')
+        ctx.append(f'BTC: ${crypto["BTC_price"]:,.2f} (24h {crypto.get("BTC_change",0):+.2f}%) '
+                   f'高:{crypto.get("BTC_high",0):,.0f} 低:{crypto.get("BTC_low",0):,.0f} '
+                   f'成交额:${crypto.get("BTC_vol",0)/1e8:.1f}亿')
     if crypto.get('ETH_price'):
-        L.append(f'| ETH | ${crypto["ETH_price"]:,.0f} | {_fmt_change(crypto.get("ETH_change"))} |')
-    if ashare.get('csi300_price'):
-        L.append(f'| 沪深300 | {ashare["csi300_price"]:,.2f} | {_fmt_change(ashare.get("csi300_change"))} |')
-    if macro.get('usdcny_price'):
-        L.append(f'| USD/CNY | {macro["usdcny_price"]:.4f} | {_fmt_change(macro.get("usdcny_change"))} |')
-    if macro.get('dxy_price'):
-        L.append(f'| DXY | {macro["dxy_price"]:.2f} | {_fmt_change(macro.get("dxy_change"))} |')
-    if macro.get('us10y_price'):
-        L.append(f'| 10Y美债 | {macro["us10y_price"]:.2f}% | {_fmt_change(macro.get("us10y_change"))} |')
-    if macro.get('gold_price'):
-        L.append(f'| 黄金 | ${macro["gold_price"]:,.2f} | {_fmt_change(macro.get("gold_change"))} |')
-
-    # ===== 加密货币详情 =====
-    L.append('')
-    L.append('---')
-    L.append('')
-    L.append('## 加密货币')
-    L.append('')
-
-    if crypto.get('BTC_price'):
-        L.append(f'**BTC** ${crypto["BTC_price"]:,.0f} ({crypto.get("BTC_change",0):+.2f}%) '
-                 f'| 24h: ${crypto.get("BTC_low",0):,.0f}~${crypto.get("BTC_high",0):,.0f} '
-                 f'| 成交: ${crypto.get("BTC_vol",0)/1e8:.1f}亿')
-    if crypto.get('ETH_price'):
-        L.append(f'**ETH** ${crypto["ETH_price"]:,.0f} ({crypto.get("ETH_change",0):+.2f}%)')
-    L.append('')
-
-    derivs = []
+        ctx.append(f'ETH: ${crypto["ETH_price"]:,.2f} (24h {crypto.get("ETH_change",0):+.2f}%)')
     if crypto.get('BTC_funding') is not None:
         ann = crypto['BTC_funding'] * 3 * 365
-        derivs.append(f'资金费率 {crypto["BTC_funding"]:+.4f}% (年化{ann:.0f}%)')
+        ctx.append(f'BTC资金费率: {crypto["BTC_funding"]:+.4f}% (年化{ann:.0f}%)')
+    if crypto.get('ETH_funding') is not None:
+        ctx.append(f'ETH资金费率: {crypto["ETH_funding"]:+.4f}%')
     if crypto.get('BTC_ls_ratio'):
-        derivs.append(f'多空比 {crypto["BTC_ls_ratio"]:.2f}:1 ({crypto.get("BTC_ls_signal","")})')
+        ctx.append(f'BTC多空比: {crypto["BTC_ls_ratio"]:.2f}:1 ({crypto.get("BTC_ls_signal","")})')
     if crypto.get('BTC_oi'):
-        derivs.append(f'OI {crypto["BTC_oi"]:,.0f}张')
-    if derivs:
-        L.append(f'**衍生品:** {" | ".join(derivs)}')
-        L.append('')
-
+        ctx.append(f'BTC持仓量(OI): {crypto["BTC_oi"]:,.0f}张')
     if crypto.get('fng_value'):
-        fng = crypto['fng_value']
-        bar = '█' * (fng // 5) + '░' * (20 - fng // 5)
-        L.append(f'**恐贪指数:** {fng}/100 ({crypto["fng_class"]}) `{bar}` 前日:{crypto.get("fng_prev",0)}')
-        L.append('')
-
-    chain = []
+        ctx.append(f'恐贪指数: {crypto["fng_value"]}/100 ({crypto["fng_class"]}) 前日:{crypto.get("fng_prev",0)}')
+    chain_info = []
     if crypto.get('hashrate_ehs'):
-        chain.append(f'算力 {crypto["hashrate_ehs"]} EH/s')
+        chain_info.append(f'算力:{crypto["hashrate_ehs"]}EH/s')
     if crypto.get('fee_fast'):
-        chain.append(f'手续费 {crypto["fee_fast"]}/{crypto["fee_mid"]}/{crypto["fee_slow"]}')
+        chain_info.append(f'手续费:{crypto["fee_fast"]}/{crypto["fee_mid"]}/{crypto["fee_slow"]}sat/vB')
     if crypto.get('diff_progress'):
-        chain.append(f'难度 {crypto["diff_progress"]}% ({crypto.get("diff_est_change",0):+.1f}%)')
-    if chain:
-        L.append(f'**链上:** {" | ".join(chain)}')
-        L.append('')
+        chain_info.append(f'难度调整进度:{crypto["diff_progress"]}% 预计变化:{crypto.get("diff_est_change",0):+.1f}%')
+    if chain_info:
+        ctx.append(f'链上数据: {", ".join(chain_info)}')
+    ctx.append('')
 
-    # ===== A股 =====
-    L.append('---')
-    L.append('')
-    L.append('## A股市场')
-    L.append('')
+    # 传统市场/宏观
+    ctx.append('【全球宏观】')
+    for key, label in [('dxy', 'DXY美元指数'), ('gold', '黄金(USD)'), ('us10y', '10Y美债收益率(%)'), ('usdcny', 'USD/CNY')]:
+        if macro.get(f'{key}_price'):
+            ctx.append(f'{label}: {macro[f"{key}_price"]:.4f} ({macro.get(f"{key}_change",0):+.2f}%)')
+    ctx.append('')
 
-    for key, label in [('csi300', '沪深300'), ('shcomp', '上证'), ('chinext', '创业板')]:
+    # A股
+    ctx.append('【A股市场】')
+    for key, label in [('csi300', '沪深300'), ('shcomp', '上证综指'), ('chinext', '创业板指')]:
         if ashare.get(f'{key}_price'):
-            L.append(f'**{label}** {ashare[f"{key}_price"]:,.2f} ({ashare.get(f"{key}_change",0):+.2f}%)')
-    L.append('')
-
+            ctx.append(f'{label}: {ashare[f"{key}_price"]:,.2f} ({ashare.get(f"{key}_change",0):+.2f}%)')
     if ashare.get('nb_total') is not None:
         nb = ashare['nb_total'] / 10000
-        direction = '净买入' if nb > 0 else '净卖出'
-        L.append(f'**北向资金:** {direction} {abs(nb):.2f}亿')
-        L.append('')
+        ctx.append(f'北向资金: {"净买入" if nb > 0 else "净卖出"} {abs(nb):.2f}亿')
+    ctx.append('')
 
-    # ===== 宏观 =====
-    L.append('---')
-    L.append('')
-    L.append('## 全球宏观')
-    L.append('')
-    for key, label in [('dxy', 'DXY美元指数'), ('gold', '黄金'), ('us10y', '10Y美债'), ('usdcny', 'USD/CNY')]:
-        if macro.get(f'{key}_price'):
-            p = macro[f'{key}_price']
-            c = macro.get(f'{key}_change', 0)
-            if key == 'gold':
-                L.append(f'**{label}:** ${p:,.2f} ({c:+.2f}%)')
-            elif key == 'us10y':
-                L.append(f'**{label}:** {p:.2f}% ({c:+.2f}%)')
-            else:
-                L.append(f'**{label}:** {p:.2f} ({c:+.2f}%)')
-    L.append('')
-
-    # ===== 要闻 =====
-    cat_names = {'macro': '全球宏观', 'crypto': '加密货币', 'china': '中国/A股'}
+    # 新闻要闻
+    cat_names = {'crypto': '加密货币', 'macro': '全球宏观', 'china': '中国/A股'}
     for cat in ['crypto', 'macro', 'china']:
         items = news.get(cat, [])
-        if not items:
-            continue
-        L.append('---')
-        L.append('')
-        L.append(f'## {cat_names[cat]}要闻 ({len(items)}条)')
-        L.append('')
-        for i, n in enumerate(items[:10], 1):
-            L.append(f'{i}. **{n["title"]}** ({n["source"]})')
-        L.append('')
+        if items:
+            ctx.append(f'【{cat_names[cat]}要闻】')
+            for n in items[:12]:
+                ctx.append(f'- {n["title"]} ({n["source"]})')
+            ctx.append('')
 
-    # ===== 今日日历 =====
+    # 经济日历
     if calendar:
-        L.append('---')
-        L.append('')
-        L.append('## 今日经济日历')
-        L.append('')
+        ctx.append('【今日经济日历】')
         for ev in calendar:
-            icon = '🔴' if ev['impact'].lower() == 'high' else '🟡'
-            L.append(f'- {ev["time_bjt"]} {icon} [{ev["country"]}] {ev["title"]} '
-                    f'(预期:{ev.get("forecast","—")} 前值:{ev.get("previous","—")})')
-        L.append('')
+            ctx.append(f'- {ev["time_bjt"]} [{ev["country"]}] {ev["title"]} '
+                       f'(影响:{ev["impact"]}, 预期:{ev.get("forecast","—")}, 前值:{ev.get("previous","—")})')
+        ctx.append('')
 
-    # ===== 底部 =====
-    L.append('---')
+    return '\n'.join(ctx)
+
+
+# ============================================================
+# Claude Sonnet 首席分析师
+# ============================================================
+ANALYST_SYSTEM_PROMPT = """你是国兴超链集团的首席分析师（Chief Analyst），每日为董事长产出机构级市场情报简报。
+
+你的分析风格融合了：
+- Ray Dalio的系统性宏观框架（流动性驱动一切）
+- Arthur Hayes的加密宏观叙事（美元流动性→风险资产传导）
+- Howard Marks的风险感知（先说什么可能出错）
+- 李迅雷的中国洞察（政策信号解读）
+
+输出规则：
+1. 结论先行：每个板块第一句话就是判断
+2. 量化有据：不说"涨了"，说"BTC涨3.2%至$67,400，突破20日均线"
+3. 跨市场连接：通过流动性/美元/风险偏好传导链串联三个市场
+4. 显式置信度：每个观点标注"高/中/低"置信度
+5. 风险优先：先说什么可能出错，再说看好什么
+6. 信号vs噪音：告诉董事长什么重要，过滤掉噪音
+7. 可操作：每份简报必须回答"所以我该怎么做"
+8. 用中文输出，专业术语可保留英文"""
+
+ANALYST_USER_PROMPT = """基于以下实时市场数据，产出今日市场情报简报。
+
+{data_context}
+
+请按以下结构输出（markdown格式）：
+
+## 执行摘要
+（3句话：①市场定调 ②过去24h最关键事件 ③今日最大风险或机会）
+
+## 市场快照
+| 资产 | 价格 | 24h变动 | 信号 |
+（包含BTC/ETH/沪深300/USD-CNY/DXY/10Y美债/黄金）
+
+## 加密货币深度
+（价格走势研判 + 衍生品信号解读 + 恐贪指数含义 + 链上数据 + 关键支撑/阻力位）
+
+## A股市场
+（指数走势 + 北向资金信号 + 政策风向判断）
+
+## 全球宏观
+（美元方向 + 利率环境 + 流动性判断 + 标注Risk-On或Risk-Off）
+
+## 跨市场信号
+（三个市场之间是否"打架"？哪些相关性出现异常？历史上类似什么时期？）
+
+## 风险雷达
+（列出2-4个风险点，每个标注🔴高/🟡中/🟢低风险等级）
+
+## 可操作观点
+（对BTC和A股各给出：方向 + 置信度 + 时间框架 + 关键价位）
+
+## 今日关注
+（从经济日历和新闻中筛选出今日最需要关注的2-3件事，标注北京时间）"""
+
+
+def analyze_with_claude(data_context):
+    """调用Claude Sonnet进行深度分析"""
+    if not ANTHROPIC_API_KEY:
+        print('  ANTHROPIC_API_KEY未设置，跳过分析')
+        return None
+
+    payload = {
+        'model': ANTHROPIC_MODEL,
+        'max_tokens': 4000,
+        'system': ANALYST_SYSTEM_PROMPT,
+        'messages': [
+            {'role': 'user', 'content': ANALYST_USER_PROMPT.format(data_context=data_context)}
+        ],
+    }
+    data = json.dumps(payload).encode('utf-8')
+    req = Request('https://api.anthropic.com/v1/messages', data=data, headers={
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+    })
+
+    try:
+        resp = json.loads(urlopen(req, timeout=120).read().decode())
+        if resp.get('content'):
+            analysis = resp['content'][0]['text']
+            tokens_in = resp.get('usage', {}).get('input_tokens', 0)
+            tokens_out = resp.get('usage', {}).get('output_tokens', 0)
+            print(f'  Claude分析完成 (in:{tokens_in} out:{tokens_out} tokens)')
+            return analysis
+        else:
+            print(f'  [Claude] 无内容返回: {resp}')
+            return None
+    except Exception as e:
+        print(f'  [Claude] {e}')
+        if hasattr(e, 'read'):
+            print(f'  Response: {e.read().decode()[:300]}')
+        return None
+
+
+# ============================================================
+# 简报组装（分析 + 原始数据 fallback）
+# ============================================================
+def build_fallback_data_section(crypto, macro, ashare, news, calendar):
+    """当Claude分析失败时的纯数据fallback"""
+    L = []
+    L.append('> ⚠️ Claude分析暂不可用，以下为原始数据')
     L.append('')
-    total = sum(len(v) for v in news.values())
-    src_ok = len([1 for name, _, _, _ in RSS_SOURCES if any(n['source'] == name for cat in news.values() for n in cat)])
-    L.append(f'*{src_ok}个源采集{total}条新闻 · Daily Intelligence v1.2*')
+
+    L.append('## 市场快照')
+    L.append('| 资产 | 价格 | 24h变动 |')
+    L.append('|:-----|-----:|-------:|')
+    if crypto.get('BTC_price'):
+        c = crypto.get('BTC_change', 0)
+        L.append(f'| BTC | ${crypto["BTC_price"]:,.0f} | {c:+.2f}% |')
+    if crypto.get('ETH_price'):
+        c = crypto.get('ETH_change', 0)
+        L.append(f'| ETH | ${crypto["ETH_price"]:,.0f} | {c:+.2f}% |')
+    if ashare.get('csi300_price'):
+        c = ashare.get('csi300_change', 0)
+        L.append(f'| 沪深300 | {ashare["csi300_price"]:,.2f} | {c:+.2f}% |')
+    if macro.get('dxy_price'):
+        c = macro.get('dxy_change', 0)
+        L.append(f'| DXY | {macro["dxy_price"]:.2f} | {c:+.2f}% |')
+    if macro.get('gold_price'):
+        c = macro.get('gold_change', 0)
+        L.append(f'| 黄金 | ${macro["gold_price"]:,.2f} | {c:+.2f}% |')
     L.append('')
-    L.append('> 需要深度分析？打开「新闻公司-每日市场情报」session，发送"分析今天的市场"')
+
+    cat_names = {'crypto': '加密货币', 'macro': '全球宏观', 'china': '中国/A股'}
+    for cat in ['crypto', 'macro', 'china']:
+        items = news.get(cat, [])
+        if items:
+            L.append(f'## {cat_names[cat]}要闻')
+            for i, n in enumerate(items[:8], 1):
+                L.append(f'{i}. {n["title"]} ({n["source"]})')
+            L.append('')
 
     return '\n'.join(L)
+
+
+def build_final_report(analysis, crypto, macro, ashare, news, calendar):
+    """组装最终推送的简报"""
+    now = datetime.now(BJT)
+    total = sum(len(v) for v in news.values())
+    src_ok = len([1 for name, _, _, _ in RSS_SOURCES if any(n['source'] == name for cat in news.values() for n in cat)])
+
+    header = f'# 每日市场情报\n**{now.strftime("%Y-%m-%d")} · 首席分析师简报**\n'
+
+    if analysis:
+        body = analysis
+    else:
+        body = build_fallback_data_section(crypto, macro, ashare, news, calendar)
+
+    footer = f'\n---\n*{src_ok}源/{total}条新闻 · Claude Sonnet分析 · Daily Intelligence v2.0*'
+
+    return header + '\n' + body + footer
 
 
 # ============================================================
@@ -575,7 +641,7 @@ def push_serverchan(report):
         return False
     try:
         now = datetime.now(BJT)
-        title = f'【新闻公司】每日市场情报 {now.strftime("%Y-%m-%d")}'
+        title = f'【首席分析师】每日市场情报 {now.strftime("%m-%d")}'
         data = json.dumps({'title': title, 'desp': report}).encode('utf-8')
         req = Request(f'https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send',
                       data=data, headers={'Content-Type': 'application/json; charset=utf-8'})
@@ -589,13 +655,6 @@ def push_serverchan(report):
 
 
 def archive_supabase(report, news_count):
-    """
-    CREATE TABLE IF NOT EXISTS daily_intelligence (
-        id BIGSERIAL PRIMARY KEY, date DATE NOT NULL,
-        report TEXT NOT NULL, news_count INTEGER,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-    """
     if not SUPABASE_KEY:
         return False
     try:
@@ -620,36 +679,41 @@ def archive_supabase(report, news_count):
 def main():
     now = datetime.now(BJT)
     print(f'\n{"="*60}')
-    print(f'  每日市场情报 v1.2 — 数据采集+模板简报')
+    print(f'  每日市场情报 v2.0 — 首席分析师(Claude Sonnet)')
     print(f'  {now.strftime("%Y-%m-%d %H:%M:%S")} BJT')
     print(f'{"="*60}')
 
-    print('\n[1/5] 加密货币...')
+    print('\n[1/6] 加密货币...')
     crypto = collect_crypto_data()
 
-    print('\n[2/5] 传统市场...')
+    print('\n[2/6] 传统市场...')
     macro = collect_macro_data()
 
-    print('\n[3/5] A股...')
+    print('\n[3/6] A股...')
     ashare = collect_ashare_data()
 
-    print('\n[4/5] 新闻...')
+    print('\n[4/6] 新闻...')
     news = collect_all_news()
     total = sum(len(v) for v in news.values())
     print(f'  合计: {total}条')
 
-    print('\n[5/5] 经济日历...')
+    print('\n[5/6] 经济日历...')
     calendar = collect_calendar()
 
-    print('\n生成简报 + 推送...')
-    report = build_report(crypto, macro, ashare, news, calendar)
+    print('\n[6/6] Claude Sonnet 深度分析...')
+    data_ctx = build_data_context(crypto, macro, ashare, news, calendar)
+    analysis = analyze_with_claude(data_ctx)
+
+    print('\n组装简报 + 推送...')
+    report = build_final_report(analysis, crypto, macro, ashare, news, calendar)
     print(f'  简报: {len(report)}字')
 
     sc_ok = push_serverchan(report)
     sb_ok = archive_supabase(report, total)
 
+    status = 'AI分析' if analysis else '数据fallback'
     print(f'\n{"="*60}')
-    print(f'  完成 | Server酱:{"OK" if sc_ok else "FAIL"} | Supabase:{"OK" if sb_ok else "FAIL"} | {total}条新闻')
+    print(f'  完成 | {status} | Server酱:{"OK" if sc_ok else "FAIL"} | Supabase:{"OK" if sb_ok else "FAIL"} | {total}条新闻')
     print(f'{"="*60}\n')
 
     if not sc_ok:
