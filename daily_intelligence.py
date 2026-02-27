@@ -367,9 +367,9 @@ RSS_SOURCES = [
     ('Decrypt', 'https://decrypt.co/feed', 'crypto', 6),
     ('DL News', 'https://www.dlnews.com/arc/outboundfeeds/rss/', 'crypto', 6),
     ('GNews Crypto', 'https://news.google.com/rss/search?q=bitcoin+OR+ethereum+OR+crypto+regulation+OR+BTC+ETF&hl=en-US&gl=US&ceid=US:en', 'crypto', 10),
-    ('金色财经', 'https://www.jinse.cn/rss', 'crypto', 8),
+    ('GNews DeFi', 'https://news.google.com/rss/search?q=DeFi+OR+stablecoin+OR+blockchain+regulation+OR+Web3&hl=en-US&gl=US&ceid=US:en', 'crypto', 8),
     ('PANews', 'https://www.panewslab.com/rss/index.html', 'crypto', 6),
-    ('律动BlockBeats', 'https://www.theblockbeats.info/rss', 'crypto', 6),
+    ('GNews CN Crypto', 'https://news.google.com/rss/search?q=%E6%AF%94%E7%89%B9%E5%B8%81+OR+%E4%BB%A5%E5%A4%AA%E5%9D%8A+OR+%E5%8C%BA%E5%9D%97%E9%93%BE+OR+%E5%8A%A0%E5%AF%86%E8%B4%A7%E5%B8%81&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', 'crypto', 10),
     ('36氪', 'https://36kr.com/feed', 'china', 8),
     ('GNews China', 'https://news.google.com/rss/search?q=China+economy+OR+PBOC+OR+yuan+OR+A-shares+OR+stimulus&hl=en-US&gl=US&ceid=US:en', 'china', 8),
 ]
@@ -450,23 +450,33 @@ def fuzzy_dedup(items, threshold=0.50):
 
 def collect_all_news():
     news = {'macro': [], 'crypto': [], 'china': []}
+    failed_sources = []
     for name, url, cat, max_n in RSS_SOURCES:
         items = fetch_rss(name, url, max_n)
+        if not items:
+            failed_sources.append(name)
         for n in items:
             n['category'] = cat
         news[cat].extend(items)
         print(f'    {name}: {len(items)}')
         time.sleep(0.1)
     cls = fetch_cls(20)
+    if not cls:
+        failed_sources.append('财联社')
     for n in cls:
         n['category'] = 'china'
     news['china'].extend(cls)
     print(f'    财联社: {len(cls)}')
-    for cat in news:
+    for cat in ['macro', 'crypto', 'china']:
         before = len(news[cat])
         news[cat] = fuzzy_dedup(news[cat])
         if before != len(news[cat]):
             print(f'    {cat}: {before}->{len(news[cat])} (去重)')
+    total_sources = len(RSS_SOURCES) + 1  # +1 for 财联社
+    ok_sources = total_sources - len(failed_sources)
+    print(f'  源健康: {ok_sources}/{total_sources} OK' +
+          (f'，失败: {", ".join(failed_sources)}' if failed_sources else ''))
+    news['_health'] = {'ok': ok_sources, 'total': total_sources, 'failed': failed_sources}
     return news
 
 
@@ -781,8 +791,10 @@ def _fallback_news_list(news):
 def build_final_report(analysis, crypto, macro, ashare, news, calendar, hr_hist=None):
     """组装最终推送的简报"""
     now = datetime.now(BJT)
-    total = sum(len(v) for v in news.values())
-    src_ok = len([1 for name, _, _, _ in RSS_SOURCES if any(n['source'] == name for cat in news.values() for n in cat)])
+    total = sum(len(v) for v in news.values() if isinstance(v, list))
+    health = news.get('_health', {})
+    src_ok = health.get('ok', 0)
+    failed = health.get('failed', [])
 
     header = f'# 每日市场情报\n**{now.strftime("%Y-%m-%d")} · 首席分析师简报**\n'
 
@@ -800,6 +812,11 @@ def build_final_report(analysis, crypto, macro, ashare, news, calendar, hr_hist=
     print('  新闻深度分析（3个分类）...')
     news_appendix = analyze_news_with_claude(news)
 
+    # 源健康降级警告
+    health_note = ''
+    if failed:
+        health_note = f'\n\n> ⚠️ **数据源警告**: {len(failed)}个源离线({", ".join(failed)})，本期覆盖可能不完整\n'
+
     footer = f'\n---\n*{src_ok}源/{total}条新闻 · Claude Sonnet分析 · Daily Intelligence v2.0*'
 
     # 新闻公司项目状态汇总（董事长每日可见）
@@ -814,7 +831,7 @@ def build_final_report(analysis, crypto, macro, ashare, news, calendar, hr_hist=
 | IEEE ICTA 2026 Keynote | 已交付 | 28页PPT+演讲稿，待董事长确认 |
 '''
 
-    return header + '\n' + body + hist_section + news_appendix + footer + project_status
+    return header + '\n' + body + hist_section + news_appendix + health_note + footer + project_status
 
 
 # ============================================================
@@ -882,7 +899,7 @@ def main():
 
     print('\n[5/7] 新闻...')
     news = collect_all_news()
-    total = sum(len(v) for v in news.values())
+    total = sum(len(v) for v in news.values() if isinstance(v, list))
     print(f'  合计: {total}条')
 
     print('\n[6/7] 经济日历...')
