@@ -157,60 +157,59 @@ def collect_crypto_data():
 
 
 # ============================================================
-# 数据采集：BTC 20天历史（OKX K线）
+# 数据采集：全网算力20天历史（mempool.space）
 # ============================================================
-def collect_btc_history(days=20):
-    """从OKX获取BTC日K，生成20天趋势文字图"""
+def collect_hashrate_history(days=20):
+    """从mempool.space获取全网算力历史，生成趋势文字图"""
     try:
-        url = f'https://www.okx.com/api/v5/market/candles?instId=BTC-USDT&bar=1D&limit={days + 1}'
-        d = _http_get_json(url)
-        candles = d.get('data', [])
-        if not candles:
+        d = _http_get_json('https://mempool.space/api/v1/mining/hashrate/1m')
+        hashrates = d.get('hashrates', [])
+        if not hashrates:
             return None
-        # OKX返回逆序（最新在前），反转为时间正序
-        candles.reverse()
-        prices = []
-        for c in candles:
-            ts = int(c[0]) / 1000
-            dt = datetime.fromtimestamp(ts, tz=BJT)
-            close = float(c[4])
-            prices.append({'date': dt.strftime('%m-%d'), 'close': close})
 
-        if len(prices) < 2:
+        # 取最近N+1天
+        recent = hashrates[-(days + 1):]
+        points = []
+        for h in recent:
+            ts = h['timestamp']
+            dt = datetime.fromtimestamp(ts, tz=BJT)
+            ehs = h['avgHashrate'] / 1e18  # 转换为 EH/s
+            points.append({'date': dt.strftime('%m-%d'), 'ehs': round(ehs, 1)})
+
+        if len(points) < 2:
             return None
 
         # 生成ASCII趋势图（8行高）
-        closes = [p['close'] for p in prices]
-        mn, mx = min(closes), max(closes)
+        values = [p['ehs'] for p in points]
+        mn, mx = min(values), max(values)
         rng = mx - mn if mx != mn else 1
         rows = 8
         chart_lines = []
         for row in range(rows, 0, -1):
             threshold = mn + rng * row / rows
             line = ''
-            for val in closes:
+            for val in values:
                 if val >= threshold:
                     line += '█'
                 elif val >= threshold - rng / rows:
                     line += '▄'
                 else:
                     line += ' '
-            price_label = f'${threshold:,.0f}' if row in (rows, rows // 2, 1) else ''
-            chart_lines.append(f'{price_label:>8}|{line}')
+            label = f'{threshold:.0f}' if row in (rows, rows // 2, 1) else ''
+            chart_lines.append(f'{label:>6}|{line}')
 
-        # 日期标签
-        date_labels = prices[0]['date'] + ' ' * max(0, len(closes) - len(prices[0]['date']) - len(prices[-1]['date'])) + prices[-1]['date']
-        chart_lines.append(f'{"":>8} {date_labels}')
+        date_labels = points[0]['date'] + ' ' * max(0, len(values) - len(points[0]['date']) - len(points[-1]['date'])) + points[-1]['date']
+        chart_lines.append(f'{"EH/s":>6} {date_labels}')
 
         chart_text = '\n'.join(chart_lines)
-        p_first, p_last = closes[0], closes[-1]
-        change_20d = (p_last - p_first) / p_first * 100
-        summary = f'BTC {days}日趋势: ${p_first:,.0f} → ${p_last:,.0f} ({change_20d:+.1f}%)'
+        v_first, v_last = values[0], values[-1]
+        change = (v_last - v_first) / v_first * 100
+        summary = f'全网算力 {days}日趋势: {v_first:.0f} → {v_last:.0f} EH/s ({change:+.1f}%)'
 
-        print(f'  BTC {days}日: ${p_first:,.0f}→${p_last:,.0f} ({change_20d:+.1f}%)')
-        return {'summary': summary, 'chart': chart_text, 'prices': prices}
+        print(f'  算力 {days}日: {v_first:.0f}→{v_last:.0f} EH/s ({change:+.1f}%)')
+        return {'summary': summary, 'chart': chart_text, 'points': points}
     except Exception as e:
-        print(f'  [OKX History] {e}')
+        print(f'  [Hashrate History] {e}')
         return None
 
 
@@ -474,7 +473,7 @@ def collect_all_news():
 # ============================================================
 # 数据上下文构建（给Claude分析用）
 # ============================================================
-def build_data_context(crypto, macro, ashare, news, calendar, btc_hist=None):
+def build_data_context(crypto, macro, ashare, news, calendar, hr_hist=None):
     """把所有采集数据组装成结构化文本，供Claude分析"""
     now = datetime.now(BJT)
     ctx = []
@@ -508,11 +507,10 @@ def build_data_context(crypto, macro, ashare, news, calendar, btc_hist=None):
         chain_info.append(f'难度调整进度:{crypto["diff_progress"]}% 预计变化:{crypto.get("diff_est_change",0):+.1f}%')
     if chain_info:
         ctx.append(f'链上数据(mempool.space): {", ".join(chain_info)}')
-    if btc_hist:
-        ctx.append(f'{btc_hist["summary"]}')
-        # 给Claude看最近20天收盘价列表
-        for p in btc_hist['prices'][-20:]:
-            ctx.append(f'  {p["date"]}: ${p["close"]:,.0f}')
+    if hr_hist:
+        ctx.append(f'{hr_hist["summary"]}')
+        for p in hr_hist['points'][-20:]:
+            ctx.append(f'  {p["date"]}: {p["ehs"]:.0f} EH/s')
     ctx.append('')
 
     # 传统市场/宏观
@@ -538,9 +536,11 @@ def build_data_context(crypto, macro, ashare, news, calendar, btc_hist=None):
     for cat in ['crypto', 'macro', 'china']:
         items = news.get(cat, [])
         if items:
-            ctx.append(f'【{cat_names[cat]}要闻】')
-            for n in items[:12]:
+            ctx.append(f'【{cat_names[cat]}要闻 ({len(items)}条)】')
+            for n in items[:20]:
                 ctx.append(f'- {n["title"]} ({n["source"]})')
+            if len(items) > 20:
+                ctx.append(f'  ...及其余{len(items)-20}条')
             ctx.append('')
 
     # 经济日历
@@ -698,20 +698,87 @@ def build_fallback_data_section(crypto, macro, ashare, news, calendar):
     return '\n'.join(L)
 
 
-def build_news_appendix(news):
-    """构建新闻全量附录，附在分析之后"""
+NEWS_ANALYSIS_PROMPT = """你是顶级财经新闻分析师。对以下{category}领域的每条新闻，逐条给出简短分析（1-2句话），说明：这条新闻为什么重要？对市场/行业意味着什么？
+
+规则：
+1. 每条新闻必须分析，不能跳过
+2. 重要的新闻标🔴，一般的标🟡，可忽略的标⚪
+3. 用中文分析，专业术语可保留英文
+4. 结论性判断，不要罗列事实
+
+新闻列表：
+{news_list}
+
+输出格式（每条一行）：
+🔴/🟡/⚪ **新闻标题** (来源) — 你的分析"""
+
+
+def analyze_news_with_claude(news):
+    """用Claude逐条分析每个分类的新闻"""
+    if not ANTHROPIC_API_KEY:
+        return _fallback_news_list(news)
+
+    cat_names = {'crypto': '加密货币', 'macro': '全球宏观', 'china': '中国/A股'}
+    results = []
+
+    for cat in ['crypto', 'macro', 'china']:
+        items = news.get(cat, [])
+        if not items:
+            continue
+
+        news_list = '\n'.join(f'{i}. {n["title"]} ({n["source"]})' for i, n in enumerate(items, 1))
+        prompt = NEWS_ANALYSIS_PROMPT.format(category=cat_names[cat], news_list=news_list)
+
+        payload = {
+            'model': ANTHROPIC_MODEL,
+            'max_tokens': 3000,
+            'messages': [{'role': 'user', 'content': prompt}],
+        }
+        raw_data = json.dumps(payload).encode('utf-8')
+
+        analysis = None
+        for attempt in range(1, 3):
+            try:
+                req = Request('https://api.anthropic.com/v1/messages', data=raw_data, headers={
+                    'x-api-key': ANTHROPIC_API_KEY,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json',
+                })
+                resp = json.loads(urlopen(req, timeout=120).read().decode())
+                if resp.get('content'):
+                    analysis = resp['content'][0]['text']
+                    tokens = resp.get('usage', {})
+                    print(f'  {cat_names[cat]}分析完成 (in:{tokens.get("input_tokens",0)} out:{tokens.get("output_tokens",0)})')
+                    break
+            except Exception as e:
+                print(f'  [{cat_names[cat]}分析] attempt {attempt}: {e}')
+                if attempt < 2:
+                    time.sleep(5)
+
+        if analysis:
+            results.append(f'\n## {cat_names[cat]}新闻深度分析 ({len(items)}条)\n\n{analysis}')
+        else:
+            # fallback: 至少列出标题
+            lines = '\n'.join(f'{i}. {n["title"]} ({n["source"]})' for i, n in enumerate(items, 1))
+            results.append(f'\n## {cat_names[cat]}新闻 ({len(items)}条)\n\n{lines}')
+
+    return '\n'.join(results)
+
+
+def _fallback_news_list(news):
+    """无API时的纯标题列表"""
     L = []
     cat_names = {'crypto': '加密货币', 'macro': '全球宏观', 'china': '中国/A股'}
     for cat in ['crypto', 'macro', 'china']:
         items = news.get(cat, [])
         if items:
-            L.append(f'\n## {cat_names[cat]}信息源 ({len(items)}条)')
+            L.append(f'\n## {cat_names[cat]}新闻 ({len(items)}条)')
             for i, n in enumerate(items, 1):
                 L.append(f'{i}. {n["title"]} ({n["source"]})')
     return '\n'.join(L)
 
 
-def build_final_report(analysis, crypto, macro, ashare, news, calendar, btc_hist=None):
+def build_final_report(analysis, crypto, macro, ashare, news, calendar, hr_hist=None):
     """组装最终推送的简报"""
     now = datetime.now(BJT)
     total = sum(len(v) for v in news.values())
@@ -724,13 +791,14 @@ def build_final_report(analysis, crypto, macro, ashare, news, calendar, btc_hist
     else:
         body = build_fallback_data_section(crypto, macro, ashare, news, calendar)
 
-    # BTC 20天趋势图（文字版）
+    # 全网算力20天趋势图（文字版）
     hist_section = ''
-    if btc_hist:
-        hist_section = f'\n\n## BTC 20日走势\n```\n{btc_hist["chart"]}\n```\n{btc_hist["summary"]}\n'
+    if hr_hist:
+        hist_section = f'\n\n## 全网算力20日走势 (mempool.space)\n```\n{hr_hist["chart"]}\n```\n{hr_hist["summary"]}\n'
 
-    # 新闻全量附录（分析之后展示所有采集到的新闻标题）
-    news_appendix = build_news_appendix(news)
+    # 新闻逐条深度分析（Claude Sonnet分析每条新闻的重要性和含义）
+    print('  新闻深度分析（3个分类）...')
+    news_appendix = analyze_news_with_claude(news)
 
     footer = f'\n---\n*{src_ok}源/{total}条新闻 · Claude Sonnet分析 · Daily Intelligence v2.0*'
 
@@ -803,8 +871,8 @@ def main():
     print('\n[1/7] 加密货币...')
     crypto = collect_crypto_data()
 
-    print('\n[2/7] BTC 20日历史...')
-    btc_hist = collect_btc_history(20)
+    print('\n[2/7] 全网算力20日历史...')
+    hr_hist = collect_hashrate_history(20)
 
     print('\n[3/7] 传统市场...')
     macro = collect_macro_data()
@@ -821,11 +889,11 @@ def main():
     calendar = collect_calendar()
 
     print('\n[7/7] Claude Sonnet 深度分析...')
-    data_ctx = build_data_context(crypto, macro, ashare, news, calendar, btc_hist)
+    data_ctx = build_data_context(crypto, macro, ashare, news, calendar, hr_hist)
     analysis = analyze_with_claude(data_ctx)
 
     print('\n组装简报 + 推送...')
-    report = build_final_report(analysis, crypto, macro, ashare, news, calendar, btc_hist)
+    report = build_final_report(analysis, crypto, macro, ashare, news, calendar, hr_hist)
     print(f'  简报: {len(report)}字')
 
     sc_ok = push_serverchan(report)
