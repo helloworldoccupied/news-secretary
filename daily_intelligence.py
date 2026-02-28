@@ -233,7 +233,9 @@ def collect_defi_data():
     try:
         d = _get('https://api.llama.fi/protocols')
         if d:
-            top5 = sorted(d, key=lambda x: x.get('tvl', 0), reverse=True)[:5]
+            # 过滤掉TVL为None的协议
+            valid = [p for p in d if p.get('tvl') is not None and isinstance(p.get('tvl'), (int, float))]
+            top5 = sorted(valid, key=lambda x: x.get('tvl', 0), reverse=True)[:5]
             data['defi_top5'] = [{'name': p['name'], 'tvl': p.get('tvl', 0),
                                   'change_1d': round(p.get('change_1d', 0) or 0, 2)}
                                  for p in top5]
@@ -430,14 +432,18 @@ def collect_ashare_data():
                'sortColumns=TRADE_DATE&sortTypes=-1&pageSize=2&pageNumber=1'
                '&reportName=RPTA_WEB_RZRQ_GGMX&columns=TRADE_DATE,RZYE,RQYE,RZRQYE')
         d = _get(url, timeout=8)
-        rows = d.get('result', {}).get('data', [])
-        if rows:
+        result = d.get('result') or {}
+        rows = result.get('data') or []
+        if rows and len(rows) > 0:
             latest = rows[0]
-            data['margin_balance'] = float(latest.get('RZRQYE', 0))
-            if len(rows) > 1:
-                prev = rows[1]
-                data['margin_change'] = float(latest.get('RZRQYE', 0)) - float(prev.get('RZRQYE', 0))
-            print(f'  融资融券: {data["margin_balance"]/1e8:.0f}亿')
+            rzrqye = latest.get('RZRQYE')
+            if rzrqye is not None:
+                data['margin_balance'] = float(rzrqye)
+                if len(rows) > 1:
+                    prev_val = rows[1].get('RZRQYE')
+                    if prev_val is not None:
+                        data['margin_change'] = float(rzrqye) - float(prev_val)
+                print(f'  融资融券: {data["margin_balance"]/1e8:.0f}亿')
     except Exception as e:
         print(f'  [融资融券] {e}')
 
