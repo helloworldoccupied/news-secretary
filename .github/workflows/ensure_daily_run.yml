@@ -1,0 +1,55 @@
+name: 保底检查（确保每日情报已运行）
+
+on:
+  schedule:
+    # 每日 08:10 BJT (00:10 UTC)，比正式推送晚10分钟
+    - cron: '10 0 * * *'
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  ensure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Check if daily intelligence ran today
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo "检查今日每日情报是否已运行..."
+
+          # 获取今天UTC日期（对应BJT 08:00的触发）
+          TODAY=$(date -u +%Y-%m-%d)
+          echo "UTC日期: $TODAY"
+
+          # 查询今天daily_intelligence.yml的运行记录
+          RUNS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/helloworldoccupied/news-secretary/actions/workflows/daily_intelligence.yml/runs?created=>=${TODAY}T00:00:00Z&status=completed&per_page=5")
+
+          SUCCESS_COUNT=$(echo "$RUNS" | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          runs = data.get('workflow_runs', [])
+          ok = [r for r in runs if r.get('conclusion') == 'success']
+          print(len(ok))
+          ")
+
+          echo "今日成功运行次数: $SUCCESS_COUNT"
+
+          if [ "$SUCCESS_COUNT" -gt "0" ]; then
+            echo "✅ 今日情报已成功运行，无需补发"
+          else
+            echo "⚠️ 今日情报未运行或失败，触发补发..."
+            curl -s -X POST \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d '{"ref":"master"}' \
+              "https://api.github.com/repos/helloworldoccupied/news-secretary/actions/workflows/daily_intelligence.yml/dispatches"
+            echo "已触发补发 dispatch"
+
+            # Server酱告警
+            curl -s -X POST "https://sctapi.ftqq.com/${{ secrets.SERVERCHAN_KEY }}.send" \
+              -H "Content-Type: application/json; charset=utf-8" \
+              -d "{\"title\":\"【情报保底】每日情报定时任务未触发，已自动补发\",\"desp\":\"GitHub Actions cron调度延迟或跳过，保底机制已自动触发补发。\\n\\n日期: $TODAY\"}"
+            echo "已发送Server酱告警"
+          fi
