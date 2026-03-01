@@ -690,6 +690,13 @@ def collect_news():
 
 CRYPTO_ANALYST_SYSTEM = """你是一位管理$50亿加密货币基金的首席投资官（CIO），每天向基金董事长提交投研日报。
 
+## 时间规范（最高优先级）
+- 所有时间引用必须使用**北京时间（BJT/UTC+8）**
+- "今日"、"昨日"、"本周"均以北京时间为基准
+- 数据中提供的采集时间就是报告基准时间
+- 不要用UTC时间，不要用"过去24小时"这种模糊说法，要用"北京时间3月2日08:00的数据显示..."
+- 价格和涨跌幅要与采集时间点一致，不要自行推断其他时间点的价格
+
 ## 你的分析方法论
 
 ### 核心矛盾法
@@ -845,6 +852,14 @@ def call_claude(data_context):
 def format_data_context(market, onchain, mining, funding, oi_ls, options, defi, macro, sentiment, news):
     """将所有数据格式化为Claude的输入"""
     sections = []
+
+    # 时间基准 — 明确告知Claude当前北京时间
+    now_bjt = datetime.now(BJT)
+    s = f'## 时间基准\n'
+    s += f'当前北京时间: {now_bjt.strftime("%Y-%m-%d %H:%M")} (BJT/UTC+8)\n'
+    s += f'以下所有数据的采集时间均为此刻。所有分析中的时间引用必须使用北京时间。\n'
+    s += f'"今日"指的是北京时间{now_bjt.strftime("%Y-%m-%d")}，"昨日"指的是北京时间{(now_bjt - timedelta(days=1)).strftime("%Y-%m-%d")}。\n'
+    sections.append(s)
 
     # 市场总览
     s = '## 市场总览\n'
