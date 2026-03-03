@@ -40,13 +40,11 @@ if sys.platform == "win32":
 # ============================================================
 # 配置
 # ============================================================
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or \
-    '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'
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'
-SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY') or 'SCT314848TkLunKgpZEAAbT1YPYUIHrI4F'
-SUPABASE_URL = os.environ.get('SUPABASE_URL') or 'https://dmdicqhkjefxethauypp.supabase.co'
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or \
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZGljcWhramVmeGV0aGF1eXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNzExODg1NCwiZXhwIjoyMDUyNjk0ODU0fQ.oWMKbrYmcgKaimITEzGaZxrlhgwE6WttJaQEjc-WoOY'
+SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36'}
 BJT = timezone(timedelta(hours=8))
@@ -1090,69 +1088,23 @@ def format_data_context(market, onchain, mining, funding, oi_ls, options, defi, 
 # 推送
 # ============================================================
 
-def push_serverchan(title, content):
-    """Server酱推送"""
-    data = json.dumps({'title': title, 'desp': content}).encode('utf-8')
-    req = Request(
-        f'https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send',
-        data=data,
-        headers={'Content-Type': 'application/json; charset=utf-8'},
-        method='POST'
-    )
-    try:
-        resp = urlopen(req, timeout=15)
-        result = json.loads(resp.read())
-        ok = result.get('code') == 0
-        print(f'  Server酱推送{"成功" if ok else "失败"}: {title}')
-        return ok
-    except Exception as e:
-        print(f'  Server酱推送失败: {e}')
-        return False
-
-
 def split_and_push(analysis_text, date_str):
-    """将分析报告分成多条Server酱推送"""
+    """将分析报告推送（通过统一推送层）"""
+    from notify import push_feishu_report, push_serverchan_report, push_serverchan_status
+
     if not analysis_text:
-        push_serverchan(f'【加密情报】{date_str} 分析失败', 'Claude分析未返回结果')
+        push_serverchan_status('加密投研日报', '失败', 'Claude分析未返回结果')
         return
 
-    # 按 ## 标题分段
-    sections = re.split(r'(?=^## )', analysis_text, flags=re.MULTILINE)
-    sections = [s.strip() for s in sections if s.strip()]
+    # 优先飞书推送完整报告
+    feishu_ok = push_feishu_report(f'【加密情报】{date_str} 投研日报', analysis_text)
 
-    if not sections:
-        push_serverchan(f'【加密情报】{date_str}', analysis_text[:30000])
-        return
+    if not feishu_ok:
+        # 飞书不可用时 fallback 到 Server酱长报告
+        push_serverchan_report(f'【加密情报】{date_str}', analysis_text)
 
-    # 智能分组：每条消息不超过25000字符（Server酱限制约32000）
-    messages = []
-    current = ''
-    current_title = ''
-
-    for section in sections:
-        if len(current) + len(section) > 25000:
-            if current:
-                messages.append((current_title, current))
-            current = section
-            # 提取第一个##标题作为消息标题
-            m = re.match(r'^## (.+)', section)
-            current_title = m.group(1) if m else '续'
-        else:
-            if not current_title:
-                m = re.match(r'^## (.+)', section)
-                current_title = m.group(1) if m else '分析报告'
-            current += '\n\n' + section if current else section
-
-    if current:
-        messages.append((current_title, current))
-
-    # 推送
-    total = len(messages)
-    for i, (title, content) in enumerate(messages, 1):
-        tag = f'({i}/{total})' if total > 1 else ''
-        push_serverchan(f'【加密情报】{date_str} {title}{tag}', content)
-        if i < total:
-            time.sleep(2)  # 避免Server酱限流
+    # Server酱只发状态通知
+    push_serverchan_status('加密投研日报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字')
 
 
 def save_to_supabase(date_str, analysis_text, data_summary):

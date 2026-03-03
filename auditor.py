@@ -28,13 +28,11 @@ if sys.platform == "win32":
 # ============================================================
 # 配置
 # ============================================================
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or \
-    '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'
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'
-SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY') or 'SCT314848TkLunKgpZEAAbT1YPYUIHrI4F'
-SUPABASE_URL = os.environ.get('SUPABASE_URL') or 'https://dmdicqhkjefxethauypp.supabase.co'
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or \
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZGljcWhramVmeGV0aGF1eXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMTMyMiwiZXhwIjoyMDg1Mzg3MzIyfQ.hAbf2cC97-iLsmplti_S1HjnKS0h7nbs9plmkKqlMsc'
+SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 
 BJT = timezone(timedelta(hours=8))
 
@@ -50,18 +48,11 @@ def _http_get_json(url, headers=None, timeout=12):
     return json.loads(urlopen(req, timeout=timeout).read().decode())
 
 
-def push_serverchan(title, desp):
-    if not SERVERCHAN_KEY:
-        return False
-    try:
-        data = json.dumps({'title': title, 'desp': desp}).encode('utf-8')
-        req = Request(f'https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send',
-                      data=data, headers={'Content-Type': 'application/json; charset=utf-8'})
-        resp = json.loads(urlopen(req, timeout=30).read())
-        return resp.get('code') == 0
-    except Exception as e:
-        print(f'  [Server酱] {e}')
-        return False
+def push_alert(title, desp):
+    """审核员告警推送（通过统一推送层）"""
+    from notify import push_serverchan_status
+    # 审核员只用 Server酱状态通道（告警短消息）
+    return push_serverchan_status('审核员巡检', '告警', f'{title}\n{desp}')
 
 
 # ============================================================
@@ -310,7 +301,7 @@ def main():
         lines.append(f'\n---\n*审核时间: {now.strftime("%Y-%m-%d %H:%M")} BJT*')
         desp = '\n'.join(lines)
 
-        ok = push_serverchan(title, desp)
+        ok = push_alert(title, desp)
         print(f'  告警推送: {"OK" if ok else "FAIL"}')
     else:
         print('  一切正常，不打扰董事长 ✓')

@@ -41,13 +41,11 @@ if sys.platform == "win32":
 # ============================================================
 # 配置
 # ============================================================
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or \
-    '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'
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'
-SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY') or 'SCT314848TkLunKgpZEAAbT1YPYUIHrI4F'
-SUPABASE_URL = os.environ.get('SUPABASE_URL') or 'https://dmdicqhkjefxethauypp.supabase.co'
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY') or \
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtZGljcWhramVmeGV0aGF1eXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTgxMTMyMiwiZXhwIjoyMDg1Mzg3MzIyfQ.hAbf2cC97-iLsmplti_S1HjnKS0h7nbs9plmkKqlMsc'
+SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 
 BJT = timezone(timedelta(hours=8))
 UA = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0'}
@@ -1197,22 +1195,22 @@ def build_final_report(analysis, crypto, macro, ashare, defi, news, calendar, hr
 # ============================================================
 # 推送 + 存档
 # ============================================================
-def push_serverchan(report):
-    if not SERVERCHAN_KEY:
-        return False
-    try:
-        now = datetime.now(BJT)
-        title = f'【首席分析师】每日市场情报 {now.strftime("%m-%d")}'
-        data = json.dumps({'title': title, 'desp': report}).encode('utf-8')
-        req = Request(f'https://sctapi.ftqq.com/{SERVERCHAN_KEY}.send',
-                      data=data, headers={'Content-Type': 'application/json; charset=utf-8'})
-        resp = json.loads(urlopen(req, timeout=30).read())
-        ok = resp.get('code') == 0
-        print(f'  Server酱: {"OK" if ok else f"FAIL {resp}"}')
-        return ok
-    except Exception as e:
-        print(f'  [Server酱] {e}')
-        return False
+def push_report(report):
+    """通过统一推送层推送报告"""
+    from notify import push_feishu_report, push_serverchan_report, push_serverchan_status
+    now = datetime.now(BJT)
+    title = f'【首席分析师】每日市场情报 {now.strftime("%m-%d")}'
+
+    # 优先飞书
+    feishu_ok = push_feishu_report(title, report)
+
+    if not feishu_ok:
+        # fallback Server酱长报告
+        push_serverchan_report(title, report)
+
+    # 状态通知
+    push_serverchan_status('每日市场情报', '成功', f'{now.strftime("%m-%d")} 报告已推送')
+    return True
 
 
 def archive_supabase(report, news_count):
@@ -1281,16 +1279,13 @@ def main():
     report = build_final_report(analysis, crypto, macro, ashare, defi, news, calendar, hr_chart)
     print(f'  简报: {len(report)}字')
 
-    sc_ok = push_serverchan(report)
+    push_ok = push_report(report)
     sb_ok = archive_supabase(report, total)
 
     status = 'AI分析' if analysis else '数据fallback'
     print(f'\n{"="*60}')
-    print(f'  完成 | {status} | Server酱:{"OK" if sc_ok else "FAIL"} | Supabase:{"OK" if sb_ok else "FAIL"} | {total}条')
+    print(f'  完成 | {status} | 推送:{"OK" if push_ok else "FAIL"} | Supabase:{"OK" if sb_ok else "FAIL"} | {total}条')
     print(f'{"="*60}\n')
-
-    if not sc_ok:
-        sys.exit(1)
 
 
 if __name__ == '__main__':
