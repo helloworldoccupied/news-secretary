@@ -10,7 +10,7 @@ AI产业情报周报 v1.0 — AI Industry Intelligence Weekly
   4. AI产业新闻：RSS feeds（TechCrunch/The Verge/机器之心/量子位）
   5. 算力市场：mempool.space算力趋势（与加密情报线共享）
 
-分析：DeepSeek V3.2 via OpenRouter（主力），Gemini 3.1（备选）
+分析：Qwen 3.5 Plus via OpenRouter（主力，1M上下文适合长篇产业分析），GLM-5（备选）
 推送：飞书卡片（主通道）+ Server酱状态通知（备用）
 存档：Supabase daily_intelligence表（title前缀 [AI-Industry]）
 """
@@ -696,15 +696,15 @@ AI_ANALYST_USER = """请基于以下本周数据，撰写AI产业情报周报。
 
 
 def call_llm_analysis(data_context):
-    """调用LLM深度分析（DeepSeek via OpenRouter，备选Gemini）"""
+    """调用LLM深度分析（Qwen 3.5 Plus via OpenRouter，备选GLM-5）"""
     from llm_engine import call_llm
-    print('\n调用LLM深度分析（DeepSeek -> Gemini fallback）...')
+    print('\n调用LLM深度分析（Qwen → GLM-5 fallback）...')
     user_msg = AI_ANALYST_USER.replace('{data_context}', data_context)
     return call_llm(
         system_prompt=AI_ANALYST_SYSTEM,
         user_prompt=user_msg,
-        model='deepseek',
-        fallback='gemini',
+        model='qwen',
+        fallback='glm5',
         max_tokens=8000,
         timeout=180,
     )

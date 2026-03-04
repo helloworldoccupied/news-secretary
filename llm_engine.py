@@ -10,10 +10,10 @@
   - google/gemini-3.1-flash-lite-preview (Gemini 3.1, 数据分析, $0.25/$1.50/M)
   - x-ai/grok-4.1-fast (Grok 4.1, 市场情绪, $0.20/$0.50/M)
 
-董事会2026-03-04选型决议：
-  Line 2 加密投研: 主力 deepseek, 备选 qwen
-  Line 3 A股情报: 主力 qwen, 备选 glm5
-  Line 4 AI产业:  主力 deepseek, 备选 gemini
+董事会2026-03-04选型决议（质量优先，不选最便宜选最合适）：
+  Line 2 加密投研: 主力 deepseek（加密领域知识最强）, 备选 qwen
+  Line 3 A股情报: 主力 glm5（中国市场专长，A股政策理解最深）, 备选 qwen
+  Line 4 AI产业:  主力 qwen（1M上下文，适合长篇产业分析）, 备选 glm5
 """
 import os
 import json
