@@ -220,7 +220,15 @@ def check_report_quality():
 def check_github_actions():
     """检查daily_intelligence workflow最近一次运行是否成功"""
     issues = []
-    gh_token = os.environ.get('GH_TOKEN') or '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'
+    gh_token = os.environ.get('GH_TOKEN', '')
+
+    if not gh_token:
+        issues.append({
+            'level': 'YELLOW',
+            'check': 'A-GitHub Actions',
+            'detail': 'GH_TOKEN环境变量未配置，跳过GitHub Actions检查'
+        })
+        return issues
 
     try:
         url = 'https://api.github.com/repos/helloworldoccupied/news-secretary/actions/runs?per_page=3'

@@ -191,9 +191,20 @@ def push_serverchan_report(title, content):
     if current:
         messages.append((current_title, current))
 
-    total = len(messages)
+    # 二次拆分：单个消息仍超25000字符时按字符硬切
+    final_messages = []
+    for msg_title, msg_content in messages:
+        if len(msg_content) <= 25000:
+            final_messages.append((msg_title, msg_content))
+        else:
+            chunks = [msg_content[i:i+25000] for i in range(0, len(msg_content), 25000)]
+            for j, chunk in enumerate(chunks):
+                suffix = f' 续{j+1}' if j > 0 else ''
+                final_messages.append((f'{msg_title}{suffix}', chunk))
+
+    total = len(final_messages)
     ok = True
-    for i, (sec_title, sec_content) in enumerate(messages, 1):
+    for i, (sec_title, sec_content) in enumerate(final_messages, 1):
         tag = f'({i}/{total})' if total > 1 else ''
         result = _raw_serverchan(f'{title} {sec_title}{tag}', sec_content)
         ok = ok and result

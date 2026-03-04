@@ -435,12 +435,21 @@ def main():
     rendered = render_snapshot(snapshot, date_str)
     title = f'【晨间快照】{date_str}'
 
-    # 优先飞书
+    # 优先飞书，失败则Server酱fallback
     feishu_ok = push_feishu_report(title, rendered)
+    fallback_ok = False
     if not feishu_ok:
-        push_serverchan_report(title, rendered)
+        fallback_ok = push_serverchan_report(title, rendered)
 
-    push_serverchan_status('晨间快照', '成功', f'{date_str} 已推送')
+    push_ok = feishu_ok or fallback_ok
+    # 检查数据完整性
+    partial = snapshot.get('execution_note', '') != ''
+    if push_ok and not partial:
+        push_serverchan_status('晨间快照', '成功', f'{date_str} 已推送')
+    elif push_ok and partial:
+        push_serverchan_status('晨间快照', '成功', f'{date_str} 已推送（部分数据降级）')
+    else:
+        push_serverchan_status('晨间快照', '失败', f'{date_str} 推送失败：飞书和Server酱均未成功')
 
     # Step 5: 存档
     print('Step 5: 存档...')
