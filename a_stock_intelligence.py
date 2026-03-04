@@ -154,12 +154,20 @@ def collect_market_indices():
     # 但指数有时返回浮点真实值。用启发式检测：如果值>100000则认为是整数编码需要/100
     fields = 'f43,f44,f45,f46,f47,f48,f60,f116,f117,f170,f171'
 
-    def _normalize_price(val, field_name='f43'):
+    def _normalize_price(val):
         """启发式检测东方财富价格是否为整数编码（需要/100）。
         指数价格范围: 上证~3000-4000, 深证~9000-13000, 创业板~1800-2500
         如果原始值>100000，说明是整数编码（如3250.12返回为325012），需要/100"""
         v = safe_float(val)
-        if v is not None and v > 100000:
+        if v is not None and abs(v) > 100000:
+            v = v / 100.0
+        return v
+
+    def _normalize_pct(val):
+        """启发式检测东方财富涨跌幅是否为整数编码（需要/100）。
+        正常指数日涨跌幅在±15%以内，超过则认为是整数编码（如-0.98%返回-98）"""
+        v = safe_float(val)
+        if v is not None and abs(v) > 15:
             v = v / 100.0
         return v
 
@@ -176,8 +184,8 @@ def collect_market_indices():
                 'prev_close': _normalize_price(d.get('f60')),
                 'volume': safe_int(d.get('f47')),         # 手
                 'amount': safe_float(d.get('f48')),       # 元
-                'change_pct': safe_float(d.get('f170')),  # 涨跌幅%
-                'change_amt': safe_float(d.get('f171')),  # 涨跌额
+                'change_pct': _normalize_pct(d.get('f170')),  # 涨跌幅%
+                'change_amt': _normalize_price(d.get('f171')),  # 涨跌额
                 'total_mcap': safe_float(d.get('f116')),  # 总市值
                 'float_mcap': safe_float(d.get('f117')),  # 流通市值
             }
@@ -417,7 +425,12 @@ def collect_sector_flow():
                '&fields=f3,f12,f14,f62,f184,f66,f69,f72,f75,f78,f81,f84,f87')
     ind_data = safe_get(ind_url)
     if ind_data and ind_data.get('data') and ind_data['data'].get('diff'):
-        for item in ind_data['data']['diff']:
+        diff = ind_data['data']['diff']
+        # diff可能是list[dict]或dict{str: dict}，统一处理
+        items = diff.values() if isinstance(diff, dict) else diff
+        for item in items:
+            if not isinstance(item, dict):
+                continue
             result['industry'].append({
                 'name': item.get('f14', ''),
                 'code': item.get('f12', ''),
@@ -444,7 +457,11 @@ def collect_sector_flow():
                '&fields=f3,f12,f14,f62,f184,f66,f69,f72,f75')
     con_data = safe_get(con_url)
     if con_data and con_data.get('data') and con_data['data'].get('diff'):
-        for item in con_data['data']['diff']:
+        diff = con_data['data']['diff']
+        items = diff.values() if isinstance(diff, dict) else diff
+        for item in items:
+            if not isinstance(item, dict):
+                continue
             result['concept'].append({
                 'name': item.get('f14', ''),
                 'code': item.get('f12', ''),
@@ -465,7 +482,11 @@ def collect_sector_flow():
     out_data = safe_get(out_url)
     if out_data and out_data.get('data') and out_data['data'].get('diff'):
         result['industry_outflow'] = []
-        for item in out_data['data']['diff']:
+        diff = out_data['data']['diff']
+        items = diff.values() if isinstance(diff, dict) else diff
+        for item in items:
+            if not isinstance(item, dict):
+                continue
             result['industry_outflow'].append({
                 'name': item.get('f14', ''),
                 'change_pct': safe_float(item.get('f3')),
@@ -969,11 +990,11 @@ def main():
             'sz_index': indices.get('深证成指', {}).get('price'),
             'cyb_index': indices.get('创业板指', {}).get('price'),
             'total_amount': indices.get('_total_amount'),
-            'northbound_net': northbound.get('summary', {}).get('total_net'),
-            'margin_rzye': margin.get('latest', {}).get('total_rzye'),
-            'zt_count': limits.get('zt', {}).get('count'),
-            'dt_count': limits.get('dt', {}).get('count'),
-            'fengban_rate': limits.get('zt', {}).get('fengban_rate'),
+            'northbound_net': (northbound.get('summary') or {}).get('total_net'),
+            'margin_rzye': (margin.get('latest') or {}).get('total_rzye') if margin else None,
+            'zt_count': (limits.get('zt') or {}).get('count'),
+            'dt_count': (limits.get('dt') or {}).get('count'),
+            'fengban_rate': (limits.get('zt') or {}).get('fengban_rate'),
             'top_sector': sectors.get('industry', [{}])[0].get('name') if sectors.get('industry') else None,
             'news_count': len(news),
         }
