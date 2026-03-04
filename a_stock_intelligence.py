@@ -147,23 +147,33 @@ def collect_market_indices():
     }
 
     # 需要的字段:
-    # f43=最新价(除以100) f44=最高 f45=最低 f46=开盘
+    # f43=最新价 f44=最高 f45=最低 f46=开盘
     # f47=成交量(手) f48=成交额 f170=涨跌幅 f171=涨跌额
     # f60=昨收 f116=总市值 f117=流通市值
+    # 注意：东方财富API个股价格字段(f43/f44/f45/f46/f60)是整数编码（需要/100），
+    # 但指数有时返回浮点真实值。用启发式检测：如果值>100000则认为是整数编码需要/100
     fields = 'f43,f44,f45,f46,f47,f48,f60,f116,f117,f170,f171'
+
+    def _normalize_price(val, field_name='f43'):
+        """启发式检测东方财富价格是否为整数编码（需要/100）。
+        指数价格范围: 上证~3000-4000, 深证~9000-13000, 创业板~1800-2500
+        如果原始值>100000，说明是整数编码（如3250.12返回为325012），需要/100"""
+        v = safe_float(val)
+        if v is not None and v > 100000:
+            v = v / 100.0
+        return v
 
     for name, secid in indices.items():
         url = f'https://push2.eastmoney.com/api/qt/stock/get?secid={secid}&fields={fields}'
         data = safe_get(url)
         if data and data.get('data'):
             d = data['data']
-            # 东方财富指数价格已经是真实值（不需要除以100）
             result[name] = {
-                'price': safe_float(d.get('f43')),
-                'high': safe_float(d.get('f44')),
-                'low': safe_float(d.get('f45')),
-                'open': safe_float(d.get('f46')),
-                'prev_close': safe_float(d.get('f60')),
+                'price': _normalize_price(d.get('f43')),
+                'high': _normalize_price(d.get('f44')),
+                'low': _normalize_price(d.get('f45')),
+                'open': _normalize_price(d.get('f46')),
+                'prev_close': _normalize_price(d.get('f60')),
                 'volume': safe_int(d.get('f47')),         # 手
                 'amount': safe_float(d.get('f48')),       # 元
                 'change_pct': safe_float(d.get('f170')),  # 涨跌幅%
@@ -658,9 +668,9 @@ def format_data_context(indices, northbound, margin, limits, sectors, news):
             for st in dt['top_stocks'][:3]:
                 s += f'  {st["name"]}({st["code"]})\n'
 
-    # 涨跌停比
-    zt_count = limits.get('zt', {}).get('count', 0)
-    dt_count = limits.get('dt', {}).get('count', 0)
+    # 涨跌停比（zt/dt可能为None，需要额外guard）
+    zt_count = (limits.get('zt') or {}).get('count', 0)
+    dt_count = (limits.get('dt') or {}).get('count', 0)
     if zt_count > 0 and dt_count > 0:
         ratio = zt_count / dt_count
         s += f'\n涨跌停比: {zt_count}:{dt_count} = {ratio:.1f}:1'
@@ -875,12 +885,18 @@ def split_and_push(analysis_text, date_str):
     # 优先飞书推送完整报告
     feishu_ok = push_feishu_report(f'【A股情报】{date_str} 交易情报', analysis_text)
 
+    sc_ok = False
     if not feishu_ok:
         # 飞书不可用时 fallback 到 Server酱长报告
-        push_serverchan_report(f'【A股情报】{date_str}', analysis_text)
+        sc_ok = push_serverchan_report(f'【A股情报】{date_str}', analysis_text)
 
-    # Server酱只发状态通知
-    push_serverchan_status('A股交易情报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字')
+    # 根据实际推送结果判断状态
+    if feishu_ok:
+        push_serverchan_status('A股交易情报', '成功', f'{date_str} 报告已推送(飞书)，{len(analysis_text)}字')
+    elif sc_ok:
+        push_serverchan_status('A股交易情报', '部分成功', f'{date_str} 飞书失败，Server酱推送，{len(analysis_text)}字')
+    else:
+        push_serverchan_status('A股交易情报', '失败', f'{date_str} 飞书和Server酱均推送失败')
 
 
 def save_to_supabase(date_str, analysis_text, data_summary):

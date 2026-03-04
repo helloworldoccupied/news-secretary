@@ -727,12 +727,18 @@ def split_and_push(analysis_text, date_str):
     # 优先飞书推送完整报告
     feishu_ok = push_feishu_report(title, analysis_text)
 
+    sc_ok = False
     if not feishu_ok:
         # 飞书不可用时 fallback 到 Server酱长报告
-        push_serverchan_report(title, analysis_text)
+        sc_ok = push_serverchan_report(title, analysis_text)
 
-    # Server酱只发状态通知
-    push_serverchan_status('AI产业周报', '成功', f'{date_str} 周报已推送，{len(analysis_text)}字')
+    # 根据实际推送结果判断状态
+    if feishu_ok:
+        push_serverchan_status('AI产业周报', '成功', f'{date_str} 周报已推送(飞书)，{len(analysis_text)}字')
+    elif sc_ok:
+        push_serverchan_status('AI产业周报', '部分成功', f'{date_str} 飞书失败，Server酱推送，{len(analysis_text)}字')
+    else:
+        push_serverchan_status('AI产业周报', '失败', f'{date_str} 飞书和Server酱均推送失败')
 
 
 # ============================================================
