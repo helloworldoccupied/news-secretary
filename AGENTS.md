@@ -21,6 +21,6 @@ This is the intelligence/news department of a conglomerate. It contains:
 - Test coverage (no test framework in this project)
 
 ## Coding Standards
-- Python 3.10+, no external dependencies beyond stdlib + `urllib` + `json`
-- Claude Sonnet API calls use Anthropic SDK with `claude-sonnet-4-20250514`
+- Python 3.10+, minimal dependencies. Core modules use only stdlib (`urllib`, `json`, `re`, `os`)
+- Claude Sonnet API calls use Anthropic SDK (`anthropic` package) with model `claude-sonnet-4-20250514` — this is the only allowed external dependency
 - All print statements use Chinese for operational logs
