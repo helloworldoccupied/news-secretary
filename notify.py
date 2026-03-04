@@ -113,17 +113,50 @@ def push_feishu_report(title, content, chat_id=None):
         print(f'  [notify] 飞书 token 获取失败，跳过正文推送')
         return False
 
-    # 飞书消息卡片格式
+    # 飞书消息卡片格式 — 按##标题分段，每段独立div+分隔线，提升可读性
+    elements = []
+
+    # 按 ## 标题拆分内容为多个段落
+    sections = re.split(r'(?=^## )', content[:30000], flags=re.MULTILINE)
+    sections = [s.strip() for s in sections if s.strip()]
+
+    if not sections:
+        # 没有标题结构，直接放一个大块
+        elements.append({
+            "tag": "div",
+            "text": {"tag": "lark_md", "content": content[:30000]}
+        })
+    else:
+        for i, section in enumerate(sections):
+            # 提取标题和正文
+            lines = section.split('\n', 1)
+            heading = lines[0].lstrip('#').strip() if lines[0].startswith('#') else ''
+            body = lines[1].strip() if len(lines) > 1 else section
+
+            if heading:
+                # 分隔线（非首个段落）
+                if i > 0:
+                    elements.append({"tag": "hr"})
+                # 段落标题（加粗大字）
+                elements.append({
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": f"**📌 {heading}**"}
+                })
+
+            # 段落正文
+            if body:
+                elements.append({
+                    "tag": "div",
+                    "text": {"tag": "lark_md", "content": body}
+                })
+
     card = {
         "config": {"wide_screen_mode": True},
         "header": {
             "title": {"tag": "plain_text", "content": title},
             "template": "blue"
         },
-        "elements": [{
-            "tag": "div",
-            "text": {"tag": "lark_md", "content": content[:30000]}
-        }]
+        "elements": elements
     }
 
     msg_body = {
