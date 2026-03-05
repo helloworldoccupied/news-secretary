@@ -1133,12 +1133,11 @@ PREVIEW_URL = 'https://helloworldoccupied.github.io/news-secretary/'
 
 
 def generate_preview_html(report_text, market, onchain, funding, options, defi, macro, sentiment):
-    """生成含ECharts交互图表的HTML预览页面，保存为preview.html"""
+    """生成图文一体化HTML预览 — 图表嵌入对应文字章节中间，不分离"""
 
     # ===== 提取图表数据 =====
     chart_data = {}
 
-    # BTC/ETH价格
     btc = market.get('prices', {}).get('bitcoin', {})
     if btc:
         chart_data['btc_price'] = btc.get('usd', 0)
@@ -1148,7 +1147,6 @@ def generate_preview_html(report_text, market, onchain, funding, options, defi, 
         chart_data['eth_price'] = eth.get('usd', 0)
         chart_data['eth_change_24h'] = eth.get('usd_24h_change', 0)
 
-    # Top coins涨跌幅
     top_coins = market.get('prices', {})
     coin_changes = {}
     for coin_id, info in top_coins.items():
@@ -1157,13 +1155,11 @@ def generate_preview_html(report_text, market, onchain, funding, options, defi, 
             coin_changes[name] = round(float(info.get('usd_24h_change', 0)), 2)
     chart_data['coin_changes'] = dict(sorted(coin_changes.items(), key=lambda x: abs(x[1]), reverse=True)[:10])
 
-    # 恐贪指数
     fg = sentiment.get('fear_greed', {})
     if fg:
         chart_data['fear_greed_value'] = int(fg.get('value', 50))
         chart_data['fear_greed_label'] = fg.get('classification', 'Neutral')
 
-    # 费率
     chart_data['funding_rates'] = {}
     for exch in ['binance', 'okx', 'bybit']:
         rates = funding.get(exch, {})
@@ -1171,41 +1167,31 @@ def generate_preview_html(report_text, market, onchain, funding, options, defi, 
             cleaned = {}
             for k, v in list(rates.items())[:8]:
                 try:
-                    if isinstance(v, (int, float)):
-                        cleaned[k] = float(v)
-                    elif isinstance(v, str):
-                        cleaned[k] = float(v)
-                    else:
-                        cleaned[k] = 0
+                    cleaned[k] = float(v) if isinstance(v, (int, float, str)) else 0
                 except:
                     cleaned[k] = 0
             chart_data['funding_rates'][exch] = cleaned
 
-    # 宏观
     for k in ['DXY', 'Gold', 'US10Y', 'SPX', 'Nasdaq']:
         macro_item = macro.get(k, {})
         if macro_item:
             chart_data[f'macro_{k.lower()}'] = macro_item.get('price', 0)
             chart_data[f'macro_{k.lower()}_change'] = macro_item.get('change_pct', macro_item.get('change_1d', 0))
 
-    # 期权
     if options.get('btc_options'):
         chart_data['put_call_ratio'] = options['btc_options'].get('put_call_ratio', 0)
     if options.get('dvol'):
         chart_data['dvol'] = options['dvol'].get('current', 0)
 
-    # 链上
     chart_data['puell_multiple'] = onchain.get('puell_multiple', 0)
     chart_data['nvt_ratio'] = onchain.get('nvt_ratio', 0)
-
-    # DeFi
     chart_data['defi_tvl'] = defi.get('tvl_current', 0)
 
     # ===== 生成ECharts JS =====
     charts_js = _build_charts_js(chart_data)
 
-    # ===== 简易markdown转HTML =====
-    report_html = _md_to_html(report_text)
+    # ===== 按##章节拆分，图表嵌入对应位置 =====
+    body_html = _build_interleaved_html(report_text, chart_data)
 
     # ===== 组装完整HTML =====
     now_bjt = datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')
@@ -1228,29 +1214,29 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 .header .meta {{ font-size: 14px; color: #8b949e; }}
 .header .price-banner {{ margin-top: 12px; font-size: 18px; }}
 .header .price-banner .btc {{ color: #f7931a; font-weight: bold; font-size: 28px; }}
-.charts-section {{ padding: 16px; }}
-.charts-section h2 {{ font-size: 20px; color: #58a6ff; margin-bottom: 16px; border-left: 4px solid #58a6ff; padding-left: 12px; }}
-.chart-row {{ display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }}
-.chart-box {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; flex: 1; min-width: 300px; }}
-.chart-box.wide {{ flex: 100%; }}
-.chart-title {{ font-size: 14px; color: #8b949e; margin-bottom: 8px; text-align: center; }}
-.chart-gauge {{ width: 100%; height: 220px; }}
-.chart-bar {{ width: 100%; height: 280px; }}
-.chart-heatmap {{ width: 100%; height: 250px; }}
-.chart-dual-gauge {{ width: 100%; height: 250px; }}
-.report-section {{ padding: 16px 20px; max-width: 900px; margin: 0 auto; }}
-.report-section h2 {{ font-size: 20px; color: #58a6ff; margin: 24px 0 12px; border-left: 4px solid #58a6ff; padding-left: 12px; }}
-.report-section h3 {{ font-size: 17px; color: #d2a8ff; margin: 18px 0 8px; }}
-.report-section p {{ margin: 8px 0; color: #c9d1d9; }}
-.report-section ul {{ margin: 8px 0 8px 20px; }}
-.report-section li {{ margin: 4px 0; color: #c9d1d9; }}
-.report-section strong {{ color: #f0f6fc; }}
-.report-section hr {{ border: none; border-top: 1px solid #30363d; margin: 20px 0; }}
+.content {{ max-width: 900px; margin: 0 auto; padding: 16px 20px; }}
+.content h2 {{ font-size: 20px; color: #58a6ff; margin: 28px 0 12px; border-left: 4px solid #58a6ff; padding-left: 12px; }}
+.content h3 {{ font-size: 17px; color: #d2a8ff; margin: 18px 0 8px; }}
+.content h4 {{ font-size: 15px; color: #79c0ff; margin: 14px 0 6px; }}
+.content p {{ margin: 8px 0; color: #c9d1d9; }}
+.content ul {{ margin: 8px 0 8px 20px; }}
+.content li {{ margin: 4px 0; color: #c9d1d9; }}
+.content strong {{ color: #f0f6fc; }}
+.content hr {{ border: none; border-top: 1px solid #30363d; margin: 20px 0; }}
+.inline-chart {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin: 16px 0; }}
+.inline-chart .chart-label {{ font-size: 13px; color: #8b949e; margin-bottom: 6px; text-align: center; }}
+.chart-row {{ display: flex; flex-wrap: wrap; gap: 12px; }}
+.chart-half {{ flex: 1; min-width: 260px; }}
+.chart-gauge {{ width: 100%; height: 200px; }}
+.chart-bar {{ width: 100%; height: 260px; }}
+.chart-heatmap {{ width: 100%; height: 240px; }}
+.chart-dual-gauge {{ width: 100%; height: 230px; }}
 .footer {{ text-align: center; padding: 20px; color: #484f58; font-size: 13px; border-top: 1px solid #30363d; margin-top: 40px; }}
 @media (max-width: 768px) {{
-  .chart-box {{ min-width: 100%; }}
+  .chart-half {{ min-width: 100%; }}
   .chart-row {{ flex-direction: column; }}
   .header h1 {{ font-size: 20px; }}
+  .content {{ padding: 12px; }}
 }}
 </style>
 </head>
@@ -1260,26 +1246,12 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
   <div class="meta">{now_bjt} | Claude Sonnet 深度分析 | 20+ 数据源</div>
   <div class="price-banner">
     BTC <span class="btc">${btc_price:,.0f}</span>
-    &nbsp;&nbsp; Fear &amp; Greed: <span style="color:{'#c62828' if fg_val < 25 else '#ef6c00' if fg_val < 45 else '#fdd835' if fg_val < 55 else '#66bb6a' if fg_val < 75 else '#2e7d32'}">{fg_val} ({fg_lbl})</span>
+    &nbsp;&nbsp; Fear &amp; Greed: <span style="color:{'#c62828' if fg_val != '?' and int(fg_val) < 25 else '#ef6c00' if fg_val != '?' and int(fg_val) < 45 else '#fdd835' if fg_val != '?' and int(fg_val) < 55 else '#66bb6a' if fg_val != '?' and int(fg_val) < 75 else '#2e7d32'}">{fg_val} ({fg_lbl})</span>
   </div>
 </div>
 
-<div class="charts-section">
-  <h2>📊 数据可视化</h2>
-  <div class="chart-row">
-    <div class="chart-box"><div class="chart-title">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
-    <div class="chart-box"><div class="chart-title">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
-  </div>
-  <div class="chart-row">
-    <div class="chart-box wide"><div class="chart-title">三所资金费率热力图 (%, 8h)</div><div id="chart-funding-rates" class="chart-heatmap"></div></div>
-  </div>
-  <div class="chart-row">
-    <div class="chart-box wide"><div class="chart-title">链上估值指标</div><div id="chart-onchain" class="chart-dual-gauge"></div></div>
-  </div>
-</div>
-
-<div class="report-section">
-{report_html}
+<div class="content">
+{body_html}
 </div>
 
 <div class="footer">
@@ -1299,12 +1271,100 @@ window.addEventListener('resize', function() {{
 </body>
 </html>'''
 
-    # 保存
     preview_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'preview.html')
     with open(preview_path, 'w', encoding='utf-8') as f:
         f.write(html)
     print(f'  预览HTML已保存: {preview_path} ({len(html)} 字符)')
     return preview_path
+
+
+# ============================================================
+# 图表与文字章节关键词匹配（决定哪个图嵌在哪个章节后面）
+# ============================================================
+CHART_SECTION_MAP = {
+    'market_overview': {
+        'keywords': ['市场概览', '市场快照', 'Market', 'Overview', '行情', '价格', '涨跌', 'Price'],
+        'html': '''<div class="inline-chart">
+  <div class="chart-row">
+    <div class="chart-half"><div class="chart-label">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
+    <div class="chart-half"><div class="chart-label">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
+  </div>
+</div>''',
+    },
+    'derivatives': {
+        'keywords': ['衍生品', '费率', 'Funding', 'Derivative', '资金费', '合约', 'Perpetual'],
+        'html': '''<div class="inline-chart">
+  <div class="chart-label">三所资金费率热力图 (%, 8h)</div>
+  <div id="chart-funding-rates" class="chart-heatmap"></div>
+</div>''',
+    },
+    'onchain': {
+        'keywords': ['链上', 'On-chain', 'Onchain', 'Puell', 'NVT', '基本面', 'Fundamental'],
+        'html': '''<div class="inline-chart">
+  <div class="chart-label">链上估值指标</div>
+  <div id="chart-onchain" class="chart-dual-gauge"></div>
+</div>''',
+    },
+}
+
+
+def _build_interleaved_html(report_text, chart_data):
+    """将分析报告按章节拆分，在对应章节后插入图表，实现图文一体化"""
+    # 按 ## 拆分章节
+    sections = re.split(r'^(## .+)$', report_text, flags=re.MULTILINE)
+
+    # sections交替：[前导文字, "## 标题1", 内容1, "## 标题2", 内容2, ...]
+    result_parts = []
+    charts_used = set()
+
+    for i, part in enumerate(sections):
+        part = part.strip()
+        if not part:
+            continue
+
+        # 转换markdown为HTML
+        part_html = _md_to_html(part)
+        result_parts.append(part_html)
+
+        # 如果这是一个## 标题行，检查下一个content部分后是否需要插入图表
+        if part.startswith('## '):
+            # 找到对应的图表（在标题后面插入）
+            for chart_key, chart_info in CHART_SECTION_MAP.items():
+                if chart_key in charts_used:
+                    continue
+                if any(kw.lower() in part.lower() for kw in chart_info['keywords']):
+                    # 找到匹配——但先输出该章节的内容，再插图表
+                    # 内容在sections[i+1]，会在下一次循环输出
+                    # 所以我们标记这个chart，在下一个非标题part之后插入
+                    charts_used.add(chart_key)
+                    # 用特殊标记，在内容输出后插入
+                    result_parts.append(f'<!--CHART:{chart_key}-->')
+                    break
+
+    # 后处理：将<!--CHART:xxx-->替换为实际图表HTML
+    # 但需要调整位置——chart标记在标题后面，应该在内容后面
+    final_parts = []
+    pending_chart = None
+    for part in result_parts:
+        if part.startswith('<!--CHART:'):
+            chart_key = part.replace('<!--CHART:', '').replace('-->', '')
+            pending_chart = chart_key
+        else:
+            final_parts.append(part)
+            if pending_chart:
+                chart_html = CHART_SECTION_MAP[pending_chart]['html']
+                final_parts.append(chart_html)
+                pending_chart = None
+
+    # 如果有图表一直没匹配到任何章节，追加到末尾
+    unused = set(CHART_SECTION_MAP.keys()) - charts_used
+    if unused:
+        final_parts.append('<div class="inline-chart"><div class="chart-row">')
+        for chart_key in unused:
+            final_parts.append(CHART_SECTION_MAP[chart_key]['html'])
+        final_parts.append('</div></div>')
+
+    return '\n'.join(final_parts)
 
 
 def _build_charts_js(data):
@@ -1448,21 +1508,26 @@ def _md_to_html(text):
 # ============================================================
 
 def split_and_push(analysis_text, date_str):
-    """将分析报告推送（Server酱，飞书已废弃）"""
+    """将分析报告推送（Server酱）— 完整图文版链接 + 文字摘要"""
     from notify import push_serverchan_report, push_serverchan_status
 
     if not analysis_text:
         push_serverchan_status('加密投研日报', '失败', 'Claude分析未返回结果')
         return
 
-    # Server酱推送 — 在报告顶部插入图表预览链接
-    preview_link = f'\n\n📊 **[点击查看交互图表]({PREVIEW_URL})** ← 恐贪指数/费率热力图/链上指标\n\n---\n\n'
-    enriched_text = preview_link + analysis_text
+    # Server酱推送 — 图文一体化版本链接 + 文字正文
+    header = (
+        f'\n\n'
+        f'## 📊 [点击查看完整图文报告（含交互图表）]({PREVIEW_URL})\n\n'
+        f'> 恐贪指数仪表盘 · 资产涨跌图 · 费率热力图 · 链上指标 — 图表嵌在分析文字中，边看边理解\n\n'
+        f'---\n\n'
+        f'*以下为纯文字版，完整图文版请点击上方链接*\n\n'
+    )
+    enriched_text = header + analysis_text
 
     push_serverchan_report(f'【加密情报】{date_str} 投研日报', enriched_text)
 
-    # 状态通知
-    push_serverchan_status('加密投研日报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字，含交互图表')
+    push_serverchan_status('加密投研日报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字，图文一体化版本')
 
 
 def save_to_supabase(date_str, analysis_text, data_summary):
