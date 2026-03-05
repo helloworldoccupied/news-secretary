@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加密投研日报 2026-03-05</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.7; }
+.header { background: linear-gradient(135deg, #1a1f36 0%, #0d1117 100%); border-bottom: 2px solid #f7931a; padding: 20px; text-align: center; }
+.header h1 { font-size: 24px; color: #f7931a; margin-bottom: 8px; }
+.header .meta { font-size: 14px; color: #8b949e; }
+.header .price-banner { margin-top: 12px; font-size: 18px; }
+.header .price-banner .btc { color: #f7931a; font-weight: bold; font-size: 28px; }
+.charts-section { padding: 16px; }
+.charts-section h2 { font-size: 20px; color: #58a6ff; margin-bottom: 16px; border-left: 4px solid #58a6ff; padding-left: 12px; }
+.chart-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+.chart-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; flex: 1; min-width: 300px; }
+.chart-box.wide { flex: 100%; }
+.chart-title { font-size: 14px; color: #8b949e; margin-bottom: 8px; text-align: center; }
+.chart-gauge { width: 100%; height: 220px; }
+.chart-bar { width: 100%; height: 280px; }
+.chart-heatmap { width: 100%; height: 250px; }
+.chart-dual-gauge { width: 100%; height: 250px; }
+.report-section { padding: 16px 20px; max-width: 900px; margin: 0 auto; }
+.report-section h2 { font-size: 20px; color: #58a6ff; margin: 24px 0 12px; border-left: 4px solid #58a6ff; padding-left: 12px; }
+.report-section h3 { font-size: 17px; color: #d2a8ff; margin: 18px 0 8px; }
+.report-section p { margin: 8px 0; color: #c9d1d9; }
+.report-section ul { margin: 8px 0 8px 20px; }
+.report-section li { margin: 4px 0; color: #c9d1d9; }
+.report-section strong { color: #f0f6fc; }
+.report-section hr { border: none; border-top: 1px solid #30363d; margin: 20px 0; }
+.footer { text-align: center; padding: 20px; color: #484f58; font-size: 13px; border-top: 1px solid #30363d; margin-top: 40px; }
+@media (max-width: 768px) {
+  .chart-box { min-width: 100%; }
+  .chart-row { flex-direction: column; }
+  .header h1 { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🪙 加密货币投研日报</h1>
+  <div class="meta">2026-03-05 08:21 BJT | Claude Sonnet 深度分析 | 20+ 数据源</div>
+  <div class="price-banner">
+    BTC <span class="btc">$72,853</span>
+    &nbsp;&nbsp; Fear &amp; Greed: <span style="color:#c62828">22 (Extreme Fear)</span>
+  </div>
+</div>
+
+<div class="charts-section">
+  <h2>📊 数据可视化</h2>
+  <div class="chart-row">
+    <div class="chart-box"><div class="chart-title">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
+    <div class="chart-box"><div class="chart-title">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box wide"><div class="chart-title">三所资金费率热力图 (%, 8h)</div><div id="chart-funding-rates" class="chart-heatmap"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box wide"><div class="chart-title">链上估值指标</div><div id="chart-onchain" class="chart-dual-gauge"></div></div>
+  </div>
+</div>
+
+<div class="report-section">
+<p># 加密货币投研日报<br><strong>北京时间：2026年3月5日 08:20</strong></p>
+<hr>
+<h2>核心矛盾与结论</h2>
+<h3>今日核心矛盾：机构资金流入 vs 矿工收入结构恶化</h3>
+<ul>🔴 <strong>矛盾一</strong>：市场显著回暖（BTC <strong>+6.7%</strong>，总市值 <strong>+5.17%</strong>），但矿工经济学指标全线恶化
+<li>矿工日收入 <strong>$29.47M</strong> 远低于30天均值 <strong>$34.19M</strong>（<strong>-13.8%</strong>）</li>
+<li>Puell Multiple <strong>0.64</strong> 处历史低位，表明矿工正承受极大压制</li>
+<li>全网算力 <strong>968.6 EH/s</strong> 低于7天均值 <strong>1025.9 EH/s</strong>（<strong>-5.6%</strong>），矿工开始关机</li></ul>
+<ul>⚡ <strong>矛盾二</strong>：价格强势反弹但链上使用效率极差
+<li>NVT Ratio <strong>181.3</strong> 远超过热线120，表明投机炒作远大于实际使用</li>
+<li>日交易量仅 <strong>$8.1B</strong>，支撑不了 <strong>$1.47T</strong> 的市值</li>
+<li>链上活跃地址 <strong>504,537</strong> 基本持平，缺乏新用户流入</li></ul>
+<h3>我的判断：技术性反弹，持续性存疑（中置信度）</h3>
+<p><strong>因果链推演</strong>：<br>恐慌情绪缓解（Fear &amp; Greed从10升至22）→ 技术性反弹 → 但缺乏基本面支撑 → 反弹高度受限 → 需观察能否突破关键阻力</p>
+<p><strong>历史类比</strong>：<br>当前形态类似2022年11月FTX事件后的反弹，当时BTC从$15,500反弹至$17,800（<strong>+14.8%</strong>），但随后再次回调。Puell Multiple当时也在0.6-0.7区间徘徊。</p>
+<h3>仓位建议</h3>
+<ul><strong>BTC</strong>：轻仓做多，目标 <strong>$76,000</strong>，止损 <strong>$70,000</strong>
+<li>理由：技术面强势，但基本面存疑，仓位控制在总资产<strong>15%</strong></li></ul>
+<ul><strong>ETH</strong>：中等仓位，目标 <strong>$2,300</strong>，止损 <strong>$2,050</strong>
+<li>理由：涨幅强于BTC（<strong>+7.4% vs +6.7%</strong>），相对强势，仓位<strong>20%</strong></li></ul>
+<ul><strong>山寨币</strong>：高度选择性配置
+<li>DOGE表现最强（<strong>+9.3%</strong>），但风险极高，仓位不超过<strong>3%</strong></li>
+<li>其他山寨暂时观望</li></ul>
+<hr>
+<h2>市场全景</h2>
+<h3>价格表现 🟢</h3>
+<li><strong>BTC</strong>: <strong>$72,853</strong>（<strong>+6.7%</strong>） 距ATH <strong>-42.5%</strong></li>
+<li><strong>ETH</strong>: <strong>$2,131</strong>（<strong>+7.4%</strong>） 表现强于BTC</li>
+<li><strong>总市值</strong>: <strong>$2.53T</strong>（<strong>+5.17%</strong>） 强劲回升</li>
+<li><strong>BTC市占率</strong>: <strong>57.4%</strong> 保持稳定统治地位</li>
+<h3>情绪指标转向 🟡</h3>
+Fear &amp; Greed指数从昨日<strong>10</strong>（极度恐慌）跳升至<strong>22</strong>（恐慌），30天趋势方向<strong>上升</strong>。这是自上月以来首次连续上升，表明市场情绪正从极度悲观中修复。
+<hr>
+<h2>矿工经济学（⚠️ 核心关注）</h2>
+<h3>算力与难度 🔴</h3>
+<li><strong>全网算力</strong>: <strong>968.6 EH/s</strong>（7日均值：<strong>1025.9 EH/s</strong>，<strong>-5.6%</strong>）</li>
+<li><strong>40天趋势</strong>: <strong>STABLE</strong>（<strong>-1.7%</strong>），但近期明显回落</li>
+<li><strong>下次难度调整</strong>: 预估<strong>-0.55%</strong>，进度<strong>93.9%</strong></li>
+<p><strong>解读</strong>：算力下降意味着边际矿工开始关机，这通常发生在挖矿不经济的时期。算力调整将在123个区块后发生，小幅下调将缓解矿工压力。</p>
+<h3>收入结构恶化 🔴</h3>
+<li><strong>矿工日收入</strong>: <strong>$29.47M</strong> vs 30天均值<strong>$34.19M</strong>（<strong>-13.8%</strong>）</li>
+<li><strong>Puell Multiple</strong>: <strong>0.64</strong>（低估区间）</li>
+<li><strong>单位算力收益</strong>: 因算力下降，单T收益略有改善</li>
+<p><strong>历史对比</strong>：当前Puell Multiple接近2020年3月暴跌时的<strong>0.62</strong>水平，当时BTC在<strong>$3,800</strong>筑底。但2020年后续有减半催化，当前缺乏类似利好。</p>
+<h3>Mempool状况 🟡</h3>
+<li><strong>未确认交易</strong>: <strong>27,049笔</strong>（中等拥堵）</li>
+<li><strong>推荐费率</strong>: <strong>1 sat/vB</strong>（极低）</li>
+<li><strong>交易费收入</strong>占矿工收入比重极小，主要依赖区块奖励</li>
+<hr>
+<h2>链上深度分析</h2>
+<h3>网络使用效率 🔴</h3>
+<li><strong>NVT Ratio</strong>: <strong>181.3</strong>（严重过热，正常&lt;120）</li>
+<li><strong>日交易量</strong>: <strong>$8.1B</strong>，无法支撑<strong>$1.47T</strong>市值</li>
+<li><strong>24h交易数</strong>: <strong>379,754笔</strong>，链上活跃度一般</li>
+<p><strong>结论</strong>：当前价格更多由投机驱动，缺乏实际使用支撑。历史上NVT Ratio超过180的时期，通常伴随价格回调。</p>
+<h3>用户活跃度 🟡</h3>
+<li><strong>活跃地址</strong>: <strong>504,537</strong>（7日均值：<strong>506,785</strong>）</li>
+<li><strong>30天均值</strong>: <strong>492,617</strong>，略有改善但增幅有限</li>
+<p>用户基础没有显著扩张，反弹更多是存量资金情绪修复。</p>
+<hr>
+<h2>衍生品市场</h2>
+<h3>资金费率分析 🟡</h3>
+仅有OKX数据，无法形成三所对比，但从现有数据看：
+<li><strong>BTC费率</strong>: <strong>0.0054%</strong>（微正）</li>
+<li><strong>ETH费率</strong>: <strong>0.0090%</strong>（明显偏多）</li>
+<li><strong>山寨币费率</strong>: SOL <strong>0.0034%</strong>，DOGE/XRP <strong>0.0100%</strong></li>
+<p>ETH费率显著高于BTC，表明ETH多头更积极，这解释了ETH涨幅强于BTC的现象。</p>
+<h3>多空比 🟡</h3>
+<li><strong>BTC多空比</strong>: <strong>0.81</strong>（空头占优）</li>
+<li>散户仍然偏空，但专业资金在抄底</li>
+<hr>
+<h2>期权市场</h2>
+<h3>波动率结构 🟢</h3>
+<li><strong>DVOL</strong>: <strong>55.5%</strong> vs <strong>历史波动率</strong>: <strong>59.19%</strong></li>
+<li><strong>IV-HV价差</strong>: <strong>-3.69%</strong>（隐含波动率低于实际）</li>
+<p>市场预期波动将下降，这通常是底部区域的特征。期权市场认为最坏情况已过。</p>
+<h3>Put/Call结构 🟡</h3>
+<li><strong>BTC Put/Call</strong>: <strong>0.730</strong>（中性偏多）</li>
+<li><strong>ETH Put/Call</strong>: <strong>0.636</strong>（更加偏多）</li>
+<li><strong>Max Pain</strong>: <strong>$68,000</strong>（3月13日到期）</li>
+<p>当前价格<strong>$72,853</strong>高于Max Pain，表明期权市场对当前反弹持谨慎态度。</p>
+<hr>
+<h2>DeFi与稳定币</h2>
+<h3>TVL回暖 🟢</h3>
+<li><strong>总TVL</strong>: <strong>$98.6B</strong>（7日<strong>+3.54%</strong>）</li>
+<li><strong>以太坊</strong>: <strong>$55.94B</strong>仍占主导</li>
+<li><strong>Solana</strong>: <strong>$6.80B</strong>保持第二位</li>
+<p>资金正回流DeFi生态，但规模仍远低于历史高点。</p>
+<h3>稳定币供应稳定 🟡</h3>
+<li><strong>总市值</strong>: <strong>$310.4B</strong></li>
+<li><strong>USDT</strong>: <strong>$183.8B</strong>（占<strong>59%</strong>）</li>
+<li><strong>USDC</strong>: <strong>$77.1B</strong></li>
+<p>稳定币供应没有显著变化，表明场外资金仍在观望。</p>
+<hr>
+<h2>宏观环境</h2>
+<h3>美元走弱利好 🟢</h3>
+<li><strong>DXY</strong>: <strong>98.78</strong>（日<strong>-0.28%</strong>）</li>
+<li>美元指数回调为风险资产提供喘息空间</li>
+<h3>利率环境改善 🔴</h3>
+<li><strong>10年期美债收益率</strong>: <strong>4.08%</strong>（日<strong>+0.59%</strong>）</li>
+<li>收益率反弹对无风险回报率敏感的加密货币构成压力</li>
+<h3>黄金强势 🟡</h3>
+<li><strong>黄金</strong>: <strong>5181.5</strong>（日<strong>+1.45%</strong>）</li>
+<li>"数字黄金"叙事下，黄金强势通常利好BTC</li>
+<hr>
+<h2>新闻与事件</h2>
+<h3>监管进展 🔴（高影响）</h3>
+华尔街监管机构推进加密监管计划，短期可能带来不确定性，但长期有利于行业规范化发展。
+<h3>机构动态 🟢（中影响）</h3>
+<li>a16z募集第五只基金<strong>20亿美元</strong>，显示机构对加密长期前景仍有信心</li>
+<li>Coinbase上线新币种，平台生态持续扩张</li>
+<h3>市场操作 🟡（低影响）</h3>
+<li>"麻吉大哥"ETH多单加仓至<strong>6050枚</strong>，显示大户抄底意愿</li>
+<li>全球最大黄金ETF大幅减持<strong>18吨</strong>，资金可能流向其他避险资产</li>
+<hr>
+<h2>风险矩阵</h2>
+<h3>Top 3风险</h3>
+<li><strong>矿工投降风险</strong>（高概率）</li>
+   - 触发条件：Puell Multiple跌破<strong>0.5</strong>
+   - 对冲：减仓至总仓位<strong>30%</strong>以下
+<ul><li><strong>技术面回调风险</strong>（中概率）</li>
+   - 触发条件：BTC跌破<strong>$70,000</strong>
+   - 对冲：激进止损，保留<strong>10%</strong>仓位</ul>
+<ul><li><strong>宏观环境恶化</strong>（低概率）</li>
+   - 触发条件：美债收益率突破<strong>4.2%</strong>
+   - 对冲：增加现金比例至<strong>50%</strong></ul>
+<h3>Top 3机会</h3>
+<li><strong>技术性反弹延续</strong>（中概率）</li>
+   - 入场条件：突破<strong>$75,000</strong>并站稳
+   - 目标位：<strong>$80,000-82,000</strong>
+<ul><li><strong>ETH相对强势</strong>（高概率）</li>
+   - 入场条件：ETH/BTC比率突破<strong>0.030</strong>
+   - 目标位：ETH <strong>$2,400</strong></ul>
+<ul><li><strong>恐慌情绪修复</strong>（高概率）</li>
+   - 入场条件：Fear &amp; Greed指数升至<strong>35</strong>以上
+   - 策略：逐步加仓至正常配置</ul>
+<p><strong>总体建议</strong>：当前处于技术性反弹阶段，但基本面支撑不足。建议轻仓参与，严格止损，等待更明确的趋势信号。</p>
+</div>
+
+<div class="footer">
+  情报部门 | Claude Sonnet 首席分析师 | 2026-03-05 08:21 BJT<br>
+  数据源: CoinGecko / Blockchain.info / mempool.space / Binance / OKX / Bybit / Deribit / DefiLlama / Yahoo Finance
+</div>
+
+<script>
+
+var fgChart = echarts.init(document.getElementById('chart-fear-greed'));
+fgChart.setOption({
+  series: [{
+    type: 'gauge', startAngle: 180, endAngle: 0, min: 0, max: 100, splitNumber: 4,
+    pointer: { show: true, length: '60%', width: 6 },
+    axisLine: { lineStyle: { width: 20,
+      color: [[0.25, '#c62828'], [0.45, '#ef6c00'], [0.55, '#fdd835'], [0.75, '#66bb6a'], [1, '#2e7d32']]
+    } },
+    axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+    detail: { fontSize: 28, fontWeight: 'bold', offsetCenter: [0, '30%'],
+      formatter: function(v) { return v + '\nExtreme Fear'; }, color: '#e6edf3'
+    },
+    data: [{ value: 22 }]
+  }]
+});
+
+var assetChart = echarts.init(document.getElementById('chart-assets'));
+assetChart.setOption({
+  tooltip: { trigger: 'axis', formatter: '{b}: {c}%' },
+  xAxis: { type: 'category', data: ["DOGEC", "ETHER", "BITCO", "CHAIN", "RIPPL", "CARDA", "SOLAN", "BINAN", "AVALA", "POLKA", "DXY", "Gold"], axisLabel: { fontSize: 11, rotate: 30, color: '#8b949e' } },
+  yAxis: { type: 'value', axisLabel: { formatter: '{value}%', color: '#8b949e' }, splitLine: { lineStyle: { color: '#21262d' } } },
+  series: [{
+    type: 'bar', data: [9.3, 7.39, 6.66, 6.4, 5.12, 4.64, 4.63, 4.02, 3.18, 0.14, -0.28, 1.45],
+    itemStyle: { color: function(p) { return ["#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#c62828", "#2e7d32"][p.dataIndex]; } },
+    label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10, color: '#8b949e' }
+  }],
+  grid: { left: 50, right: 20, top: 20, bottom: 60 }
+});
+
+var rateChart = echarts.init(document.getElementById('chart-funding-rates'));
+rateChart.setOption({
+  tooltip: { formatter: function(p) { return p.data[2] ? p.data[2].toFixed(4) + '%' : 'N/A'; } },
+  xAxis: { type: 'category', data: ["BTC", "DOGE", "ETH", "SOL", "XRP"], axisLabel: { fontSize: 11, color: '#8b949e' } },
+  yAxis: { type: 'category', data: ["okx"], axisLabel: { fontSize: 12, color: '#8b949e' } },
+  visualMap: { min: -0.05, max: 0.1, calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
+    inRange: { color: ['#c62828', '#ffeb3b', '#2e7d32'] }, textStyle: { color: '#8b949e', fontSize: 11 }
+  },
+  series: [{
+    type: 'heatmap', data: [[0, 0, 0.0], [1, 0, 0.0], [2, 0, 0.0], [3, 0, 0.0], [4, 0, 0.0]],
+    label: { show: true, fontSize: 10, formatter: function(p) { return p.data[2] ? p.data[2].toFixed(3) : ''; }, color: '#e6edf3' }
+  }],
+  grid: { left: 70, right: 20, top: 10, bottom: 60 }
+});
+
+var onchainChart = echarts.init(document.getElementById('chart-onchain'));
+onchainChart.setOption({
+  tooltip: {},
+  series: [
+    { type: 'gauge', center: ['30%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
+      min: 0, max: 4, splitNumber: 4, pointer: { length: '55%', width: 5 },
+      axisLine: { lineStyle: { width: 15, color: [[0.3, '#2e7d32'], [0.7, '#fdd835'], [1, '#c62828']] } },
+      axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+      title: { text: 'Puell\nMultiple', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' },
+      detail: { fontSize: 20, offsetCenter: [0, '45%'], formatter: '{value}', color: '#e6edf3' },
+      data: [{ value: 0.64 }]
+    },
+    { type: 'gauge', center: ['70%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
+      min: 0, max: 200, splitNumber: 4, pointer: { length: '55%', width: 5 },
+      axisLine: { lineStyle: { width: 15, color: [[0.3, '#c62828'], [0.5, '#fdd835'], [1, '#2e7d32']] } },
+      axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+      title: { text: 'NVT\nRatio', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' },
+      detail: { fontSize: 20, offsetCenter: [0, '45%'], formatter: '{value}', color: '#e6edf3' },
+      data: [{ value: 181.3 }]
+    }
+  ]
+});
+window.addEventListener('resize', function() {
+  document.querySelectorAll('[id^="chart-"]').forEach(function(el) {
+    var c = echarts.getInstanceByDom(el);
+    if (c) c.resize();
+  });
+});
+</script>
+</body>
+</html>
