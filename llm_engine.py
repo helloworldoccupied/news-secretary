@@ -1,29 +1,44 @@
 #!/usr/bin/env python3
 """
-统一LLM调用层 — 通过OpenRouter访问多模型
-所有情报线的LLM调用统一收敛到此模块，不再直接调用Anthropic/DeepSeek等单独API。
+统一LLM调用层 — Claude Sonnet为主力，中国LLM为fallback
 
-支持模型（均通过OpenRouter转接，单一API Key）：
-  - deepseek/deepseek-chat (DeepSeek V3.2, 最便宜, $0.14/$0.28/M)
-  - qwen/qwen3.5-plus-02-15 (Qwen 3.5 Plus, 1M上下文, $0.26/$1.56/M)
-  - z-ai/glm-5 (GLM-5, 中国市场专长, $0.80/$2.56/M)
-  - google/gemini-3.1-flash-lite-preview (Gemini 3.1, 数据分析, $0.25/$1.50/M)
-  - x-ai/grok-4.1-fast (Grok 4.1, 市场情绪, $0.20/$0.50/M)
+全集团LLM统一为Claude Sonnet（CLAUDE.md铁律），Anthropic API已充值。
+三线情报全部使用Claude Sonnet直连Anthropic API，中国LLM仅作为fallback。
 
-董事会2026-03-04选型决议（质量优先，不选最便宜选最合适）：
-  Line 2 加密投研: 主力 deepseek（加密领域知识最强）, 备选 qwen
-  Line 3 A股情报: 主力 glm5（中国市场专长，A股政策理解最深）, 备选 qwen
-  Line 4 AI产业:  主力 qwen（1M上下文，适合长篇产业分析）, 备选 glm5
+主力模型：
+  - claude-sonnet（直连Anthropic API，全集团标准，质量最高）
+
+Fallback模型（Claude不可用时自动切换，通过OpenRouter）：
+  - deepseek (DeepSeek V3.2)
+  - qwen (Qwen 3.5 Plus)
+  - glm5 (GLM-5, 智谱直连备选)
+
+董事长2026-03-04决策：Anthropic官方充值，全线用Claude Sonnet。
 """
 import os
 import json
 from urllib.request import Request, urlopen
 
+# === Claude Sonnet 直连 Anthropic API（主力） ===
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+ANTHROPIC_API = 'https://api.anthropic.com/v1/messages'
+ANTHROPIC_MODEL = 'claude-sonnet-4-20250514'
+
+# === OpenRouter（fallback通道） ===
 OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
 OPENROUTER_API = 'https://openrouter.ai/api/v1/chat/completions'
 
-# 预定义模型 — 短名→OpenRouter model ID
+# === 智谱直连（GLM-5 fallback） ===
+ZHIPU_API_KEY = os.environ.get('ZHIPU_API_KEY', '')
+ZHIPU_API = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+ZHIPU_MODEL = 'glm-4-plus'
+
+# 哪些模型有直连fallback
+DIRECT_FALLBACKS = {'glm5', 'sonnet'}
+
+# 预定义模型 — 短名→OpenRouter model ID（仅fallback使用）
 MODELS = {
+    'sonnet': 'anthropic/claude-sonnet-4-20250514',  # OpenRouter也可走，但优先直连
     'deepseek': 'deepseek/deepseek-chat',
     'qwen': 'qwen/qwen3.5-plus-02-15',
     'glm5': 'z-ai/glm-5',
@@ -32,15 +47,21 @@ MODELS = {
 }
 
 
-def call_llm(system_prompt, user_prompt, model='deepseek', fallback='qwen',
+def call_llm(system_prompt, user_prompt, model='sonnet', fallback='deepseek',
              max_tokens=8000, timeout=180):
     """
-    调用LLM分析（通过OpenRouter统一网关）。
+    调用LLM分析。
+
+    路由逻辑：
+      1. model='sonnet' → 直连Anthropic API（主力，最高质量）
+      2. 其他模型 → OpenRouter统一网关
+      3. 主力失败 → fallback模型（通过OpenRouter）
+      4. 特定模型有直连fallback（如glm5→智谱直连）
 
     Args:
         system_prompt: 系统提示词（角色设定+方法论）
         user_prompt: 用户消息（数据+指令）
-        model: 主力模型短名 ('deepseek'/'qwen'/'glm5'/'gemini'/'grok')
+        model: 主力模型短名 ('sonnet'/'deepseek'/'qwen'/'glm5'/'gemini'/'grok')
         fallback: 备选模型短名，主力失败时自动切换
         max_tokens: 最大输出token数
         timeout: API超时秒数
@@ -48,28 +69,128 @@ def call_llm(system_prompt, user_prompt, model='deepseek', fallback='qwen',
     Returns:
         str: LLM响应文本，所有模型均失败返回None
     """
-    if not OPENROUTER_API_KEY:
-        print('  [llm] ❌ OPENROUTER_API_KEY 未配置')
-        return None
+    # ===== 主力模型 =====
+    if model == 'sonnet':
+        # Claude Sonnet 直连 Anthropic API（最高优先级）
+        if ANTHROPIC_API_KEY:
+            print(f'  [llm] 调用主力模型 Claude Sonnet (直连Anthropic)...')
+            result = _call_anthropic_direct(system_prompt, user_prompt, max_tokens, timeout)
+            if result:
+                return result
+        else:
+            print('  [llm] ⚠️ ANTHROPIC_API_KEY 未配置，跳过Anthropic直连')
 
-    model_id = MODELS.get(model, model)
-    fallback_id = MODELS.get(fallback, fallback) if fallback else None
+        # Anthropic直连失败 → 尝试OpenRouter走Sonnet
+        if OPENROUTER_API_KEY:
+            model_id = MODELS.get('sonnet', 'anthropic/claude-sonnet-4-20250514')
+            print(f'  [llm] Anthropic直连失败，尝试OpenRouter走 {model_id}...')
+            result = _call_openrouter(model_id, system_prompt, user_prompt, max_tokens, timeout)
+            if result:
+                return result
+    else:
+        # 非Sonnet模型 → OpenRouter
+        model_id = MODELS.get(model, model)
+        if OPENROUTER_API_KEY:
+            print(f'  [llm] 调用主力模型 {model_id}...')
+            result = _call_openrouter(model_id, system_prompt, user_prompt, max_tokens, timeout)
+            if result:
+                return result
+        else:
+            print('  [llm] ⚠️ OPENROUTER_API_KEY 未配置，跳过OpenRouter')
 
-    # 尝试主力模型
-    print(f'  [llm] 调用主力模型 {model_id}...')
-    result = _call_openrouter(model_id, system_prompt, user_prompt, max_tokens, timeout)
-    if result:
-        return result
+        # OpenRouter失败 → 尝试直连fallback（如果该模型支持）
+        if model in DIRECT_FALLBACKS:
+            if model == 'glm5':
+                print(f'  [llm] OpenRouter失败，尝试智谱直连 {ZHIPU_MODEL}...')
+                result = _call_zhipu_direct(system_prompt, user_prompt, max_tokens, timeout)
+                if result:
+                    return result
 
-    # 主力失败 → 自动切换备选
-    if fallback_id and fallback_id != model_id:
-        print(f'  [llm] 主力失败，切换备选 {fallback_id}...')
-        result = _call_openrouter(fallback_id, system_prompt, user_prompt, max_tokens, timeout)
-        if result:
-            return result
+    # ===== Fallback模型 =====
+    if fallback:
+        fallback_id = MODELS.get(fallback, fallback)
+        main_id = MODELS.get(model, model)
+        if fallback_id != main_id:
+            # 先尝试直连（如果fallback是sonnet）
+            if fallback == 'sonnet' and ANTHROPIC_API_KEY:
+                print(f'  [llm] 切换备选模型 Claude Sonnet (直连Anthropic)...')
+                result = _call_anthropic_direct(system_prompt, user_prompt, max_tokens, timeout)
+                if result:
+                    return result
+
+            # OpenRouter走fallback
+            if OPENROUTER_API_KEY:
+                print(f'  [llm] 切换备选模型 {fallback_id}...')
+                result = _call_openrouter(fallback_id, system_prompt, user_prompt, max_tokens, timeout)
+                if result:
+                    return result
+
+            # fallback是glm5时尝试智谱直连
+            if fallback == 'glm5':
+                print(f'  [llm] 尝试智谱直连 {ZHIPU_MODEL}...')
+                result = _call_zhipu_direct(system_prompt, user_prompt, max_tokens, timeout)
+                if result:
+                    return result
 
     print('  [llm] ❌ 所有模型均失败')
     return None
+
+
+def _call_anthropic_direct(system_prompt, user_prompt, max_tokens, timeout):
+    """直连Anthropic API（Messages API格式，与OpenAI不同）。
+
+    Anthropic Messages API文档: https://docs.anthropic.com/en/api/messages
+    请求格式与OpenAI不同：system是顶层字段，不在messages数组内。
+    """
+    if not ANTHROPIC_API_KEY:
+        print('  [llm] ⚠️ ANTHROPIC_API_KEY 未配置，跳过Anthropic直连')
+        return None
+
+    headers = {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+    }
+
+    payload = {
+        'model': ANTHROPIC_MODEL,
+        'max_tokens': max_tokens,
+        'system': system_prompt,
+        'messages': [
+            {'role': 'user', 'content': user_prompt},
+        ],
+    }
+
+    try:
+        body = json.dumps(payload).encode('utf-8')
+        req = Request(ANTHROPIC_API, data=body, headers=headers, method='POST')
+        resp = urlopen(req, timeout=timeout)
+        result = json.loads(resp.read())
+
+        # 解析Anthropic响应格式（与OpenAI不同）
+        # Anthropic: {"content": [{"type": "text", "text": "..."}], "usage": {...}}
+        content_blocks = result.get('content', [])
+        text_parts = []
+        for block in content_blocks:
+            if block.get('type') == 'text':
+                text_parts.append(block.get('text', ''))
+
+        content = '\n'.join(text_parts)
+
+        if not content:
+            print(f'  [llm] Anthropic {ANTHROPIC_MODEL} 返回空响应')
+            return None
+
+        # 日志
+        usage = result.get('usage', {})
+        tokens_in = usage.get('input_tokens', 0)
+        tokens_out = usage.get('output_tokens', 0)
+        print(f'  [llm] ✅ Anthropic {ANTHROPIC_MODEL}: {tokens_in} in / {tokens_out} out')
+        return content
+
+    except Exception as e:
+        print(f'  [llm] ❌ Anthropic {ANTHROPIC_MODEL} 失败: {e}')
+        return None
 
 
 def _call_openrouter(model_id, system_prompt, user_prompt, max_tokens, timeout):
@@ -119,4 +240,52 @@ def _call_openrouter(model_id, system_prompt, user_prompt, max_tokens, timeout):
 
     except Exception as e:
         print(f'  [llm] ❌ {model_id} 失败: {e}')
+        return None
+
+
+def _call_zhipu_direct(system_prompt, user_prompt, max_tokens, timeout):
+    """直连智谱AI API（OpenAI兼容格式），OpenRouter上游故障时的fallback。
+
+    智谱API文档: https://open.bigmodel.cn/dev/api
+    使用glm-4-plus模型，中国大陆直连可用，无需翻墙。
+    """
+    if not ZHIPU_API_KEY:
+        print('  [llm] ⚠️ ZHIPU_API_KEY 未配置，跳过智谱直连')
+        return None
+
+    headers = {
+        'Authorization': f'Bearer {ZHIPU_API_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+    payload = {
+        'model': ZHIPU_MODEL,
+        'messages': [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': user_prompt},
+        ],
+        'max_tokens': max_tokens,
+    }
+
+    try:
+        body = json.dumps(payload).encode('utf-8')
+        req = Request(ZHIPU_API, data=body, headers=headers, method='POST')
+        resp = urlopen(req, timeout=timeout)
+        result = json.loads(resp.read())
+
+        # 解析响应（OpenAI兼容格式）
+        content = result['choices'][0]['message'].get('content', '')
+        if not content:
+            print(f'  [llm] 智谱直连 {ZHIPU_MODEL} 返回空响应')
+            return None
+
+        # 日志
+        usage = result.get('usage', {})
+        tokens_in = usage.get('prompt_tokens', 0)
+        tokens_out = usage.get('completion_tokens', 0)
+        print(f'  [llm] ✅ 智谱直连 {ZHIPU_MODEL}: {tokens_in} in / {tokens_out} out')
+        return content
+
+    except Exception as e:
+        print(f'  [llm] ❌ 智谱直连 {ZHIPU_MODEL} 失败: {e}')
         return None

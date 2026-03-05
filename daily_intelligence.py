@@ -1196,17 +1196,13 @@ def build_final_report(analysis, crypto, macro, ashare, defi, news, calendar, hr
 # 推送 + 存档
 # ============================================================
 def push_report(report):
-    """通过统一推送层推送报告"""
-    from notify import push_feishu_report, push_serverchan_report, push_serverchan_status
+    """通过统一推送层推送报告（Server酱，飞书已废弃）"""
+    from notify import push_serverchan_report, push_serverchan_status
     now = datetime.now(BJT)
     title = f'【首席分析师】每日市场情报 {now.strftime("%m-%d")}'
 
-    # 优先飞书
-    feishu_ok = push_feishu_report(title, report)
-
-    if not feishu_ok:
-        # fallback Server酱长报告
-        push_serverchan_report(title, report)
+    # Server酱推送
+    push_serverchan_report(title, report)
 
     # 状态通知
     push_serverchan_status('每日市场情报', '成功', f'{now.strftime("%m-%d")} 报告已推送')

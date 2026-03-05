@@ -9,7 +9,7 @@
   3. AI / 具身机器人 (ai_robotics_summary)
   4. 今日机会与风险 (today_opportunities + today_risks + execution_note)
 
-流程：采集数据 → 结构化 JSON → Claude 生成快照 → 飞书正文 + Server酱状态
+流程：采集数据 → 结构化 JSON → Claude 生成快照 → Server酱推送（飞书已废弃）
 """
 import sys
 import os
@@ -329,7 +329,7 @@ def call_claude(structured_data):
 # 渲染为推送正文
 # ============================================================
 def render_snapshot(snapshot, date_str):
-    """将结构化 JSON 渲染为飞书/Server酱可读的正文"""
+    """将结构化 JSON 渲染为Server酱可读的正文"""
     lines = [
         f'# 晨间快照 {date_str}',
         '',
@@ -388,7 +388,7 @@ def archive_to_supabase(date_str, snapshot_json, rendered_text):
 # 主流程
 # ============================================================
 def main():
-    from notify import push_feishu_report, push_serverchan_report, push_serverchan_status
+    from notify import push_serverchan_report, push_serverchan_status
 
     now = datetime.now(BJT)
     date_str = now.strftime('%Y-%m-%d')
@@ -435,13 +435,9 @@ def main():
     rendered = render_snapshot(snapshot, date_str)
     title = f'【晨间快照】{date_str}'
 
-    # 优先飞书，失败则Server酱fallback
-    feishu_ok = push_feishu_report(title, rendered)
-    fallback_ok = False
-    if not feishu_ok:
-        fallback_ok = push_serverchan_report(title, rendered)
+    # Server酱推送（飞书已废弃）
+    push_ok = push_serverchan_report(title, rendered)
 
-    push_ok = feishu_ok or fallback_ok
     # 检查数据完整性
     partial = snapshot.get('execution_note', '') != ''
     if push_ok and not partial:
@@ -449,7 +445,7 @@ def main():
     elif push_ok and partial:
         push_serverchan_status('晨间快照', '成功', f'{date_str} 已推送（部分数据降级）')
     else:
-        push_serverchan_status('晨间快照', '失败', f'{date_str} 推送失败：飞书和Server酱均未成功')
+        push_serverchan_status('晨间快照', '失败', f'{date_str} Server酱推送失败')
 
     # Step 5: 存档
     print('Step 5: 存档...')

@@ -21,11 +21,9 @@ jobs:
 
       - name: Run AI Industry Intelligence
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          FEISHU_APP_ID: ${{ secrets.FEISHU_APP_ID }}
-          FEISHU_APP_SECRET: ${{ secrets.FEISHU_APP_SECRET }}
-          FEISHU_CHAT_ID: ${{ secrets.FEISHU_CHAT_ID }}
         run: python ai_industry_intelligence.py

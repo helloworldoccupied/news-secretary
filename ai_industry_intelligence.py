@@ -11,7 +11,7 @@ AI产业情报周报 v1.0 — AI Industry Intelligence Weekly
   5. 算力市场：mempool.space算力趋势（与加密情报线共享）
 
 分析：Qwen 3.5 Plus via OpenRouter（主力，1M上下文适合长篇产业分析），GLM-5（备选）
-推送：飞书卡片（主通道）+ Server酱状态通知（备用）
+推送：Server酱（微信推送，唯一通道，飞书已废弃）
 存档：Supabase daily_intelligence表（title前缀 [AI-Industry]）
 """
 import sys
@@ -27,10 +27,8 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from urllib.parse import quote as url_quote
 
-# Windows UTF-8 兼容
-if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+# Windows UTF-8 兼容 — 移到 __main__ 入口，避免被import时重复包装导致I/O closed
+# （由 generate_preview.py 通过 PYTHONIOENCODING=utf-8 环境变量处理编码）
 
 # ============================================================
 # 配置
@@ -696,15 +694,15 @@ AI_ANALYST_USER = """请基于以下本周数据，撰写AI产业情报周报。
 
 
 def call_llm_analysis(data_context):
-    """调用LLM深度分析（Qwen 3.5 Plus via OpenRouter，备选GLM-5）"""
+    """调用LLM深度分析（Claude Sonnet直连Anthropic API，备选Qwen）"""
     from llm_engine import call_llm
-    print('\n调用LLM深度分析（Qwen → GLM-5 fallback）...')
+    print('\n调用LLM深度分析（Claude Sonnet → Qwen fallback）...')
     user_msg = AI_ANALYST_USER.replace('{data_context}', data_context)
     return call_llm(
         system_prompt=AI_ANALYST_SYSTEM,
         user_prompt=user_msg,
-        model='qwen',
-        fallback='glm5',
+        model='sonnet',
+        fallback='qwen',
         max_tokens=8000,
         timeout=180,
     )
@@ -715,8 +713,8 @@ def call_llm_analysis(data_context):
 # ============================================================
 
 def split_and_push(analysis_text, date_str):
-    """将分析报告推送（通过统一推送层）"""
-    from notify import push_feishu_report, push_serverchan_report, push_serverchan_status
+    """将分析报告推送（Server酱，飞书已废弃）"""
+    from notify import push_serverchan_report, push_serverchan_status
 
     if not analysis_text:
         push_serverchan_status('AI产业周报', '失败', 'LLM分析未返回结果')
@@ -724,21 +722,14 @@ def split_and_push(analysis_text, date_str):
 
     title = f'【AI产业】{date_str} 周报 ({WEEK_STR})'
 
-    # 优先飞书推送完整报告
-    feishu_ok = push_feishu_report(title, analysis_text)
+    # Server酱推送完整报告
+    sc_ok = push_serverchan_report(title, analysis_text)
 
-    sc_ok = False
-    if not feishu_ok:
-        # 飞书不可用时 fallback 到 Server酱长报告
-        sc_ok = push_serverchan_report(title, analysis_text)
-
-    # 根据实际推送结果判断状态
-    if feishu_ok:
-        push_serverchan_status('AI产业周报', '成功', f'{date_str} 周报已推送(飞书)，{len(analysis_text)}字')
-    elif sc_ok:
-        push_serverchan_status('AI产业周报', '部分成功', f'{date_str} 飞书失败，Server酱推送，{len(analysis_text)}字')
+    # 状态通知
+    if sc_ok:
+        push_serverchan_status('AI产业周报', '成功', f'{date_str} 周报已推送，{len(analysis_text)}字')
     else:
-        push_serverchan_status('AI产业周报', '失败', f'{date_str} 飞书和Server酱均推送失败')
+        push_serverchan_status('AI产业周报', '失败', f'{date_str} Server酱推送失败')
 
 
 # ============================================================
@@ -856,4 +847,7 @@ def main():
 
 
 if __name__ == '__main__':
+    if sys.platform == "win32":
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
     main()

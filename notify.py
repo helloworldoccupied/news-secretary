@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
 统一推送层 — 所有推送收敛到此模块
-双通道：
-  - 飞书 (Feishu/Lark): 正文主通道，发送投研报告全文
-  - Server酱 (ServerChan): 状态提醒通道，只发送简短状态
+单通道：Server酱 (ServerChan) — 推送到董事长微信
 
+飞书已于2026-03-04完全废弃（董事长决策），所有推送统一Server酱。
 任何脚本不应直接调用推送 API，统一通过本模块的函数调用。
 """
 import os
@@ -18,13 +17,7 @@ from urllib.error import URLError, HTTPError
 # 配置（从环境变量读取）
 # ============================================================
 SERVERCHAN_KEY = os.environ.get('SERVERCHAN_KEY', '')
-FEISHU_APP_ID = os.environ.get('FEISHU_APP_ID', '')
-FEISHU_APP_SECRET = os.environ.get('FEISHU_APP_SECRET', '')
-FEISHU_CHAT_ID = os.environ.get('FEISHU_CHAT_ID', '')
-
 SERVERCHAN_API = 'https://sctapi.ftqq.com/{key}.send'
-FEISHU_TOKEN_API = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'
-FEISHU_MSG_API = 'https://open.feishu.cn/open-apis/im/v1/messages?receive_id_type=chat_id'
 
 
 # ============================================================
@@ -70,124 +63,12 @@ def push_serverchan_status(task_name, status, summary=''):
 
 
 # ============================================================
-# 飞书 — 正文主通道
-# ============================================================
-def _get_feishu_token():
-    """获取飞书 tenant_access_token"""
-    if not FEISHU_APP_ID or not FEISHU_APP_SECRET:
-        return None
-    try:
-        data = json.dumps({
-            'app_id': FEISHU_APP_ID,
-            'app_secret': FEISHU_APP_SECRET
-        }).encode('utf-8')
-        req = Request(FEISHU_TOKEN_API, data=data,
-                      headers={'Content-Type': 'application/json'})
-        resp = json.loads(urlopen(req, timeout=10).read())
-        if resp.get('code') == 0:
-            return resp.get('tenant_access_token')
-        print(f'  [notify] 飞书token获取失败: {resp}')
-        return None
-    except Exception as e:
-        print(f'  [notify] 飞书token异常: {e}')
-        return None
-
-
-def push_feishu_report(title, content, chat_id=None):
-    """
-    飞书正文推送（长消息）。
-    用于：发送投研报告、新闻简报等完整正文。
-
-    Args:
-        title: 消息标题
-        content: 正文内容（markdown 格式）
-        chat_id: 飞书群 chat_id，默认用环境变量中的 FEISHU_CHAT_ID
-    """
-    target_chat = chat_id or FEISHU_CHAT_ID
-    if not target_chat:
-        print(f'  [notify] 飞书 chat_id 未配置，跳过正文推送')
-        return False
-
-    token = _get_feishu_token()
-    if not token:
-        print(f'  [notify] 飞书 token 获取失败，跳过正文推送')
-        return False
-
-    # 飞书消息卡片格式 — 按##标题分段，每段独立div+分隔线，提升可读性
-    elements = []
-
-    # 按 ## 标题拆分内容为多个段落
-    sections = re.split(r'(?=^## )', content[:30000], flags=re.MULTILINE)
-    sections = [s.strip() for s in sections if s.strip()]
-
-    if not sections:
-        # 没有标题结构，直接放一个大块
-        elements.append({
-            "tag": "div",
-            "text": {"tag": "lark_md", "content": content[:30000]}
-        })
-    else:
-        for i, section in enumerate(sections):
-            # 提取标题和正文
-            lines = section.split('\n', 1)
-            heading = lines[0].lstrip('#').strip() if lines[0].startswith('#') else ''
-            body = lines[1].strip() if len(lines) > 1 else section
-
-            if heading:
-                # 分隔线（非首个段落）
-                if i > 0:
-                    elements.append({"tag": "hr"})
-                # 段落标题（加粗大字）
-                elements.append({
-                    "tag": "div",
-                    "text": {"tag": "lark_md", "content": f"**📌 {heading}**"}
-                })
-
-            # 段落正文
-            if body:
-                elements.append({
-                    "tag": "div",
-                    "text": {"tag": "lark_md", "content": body}
-                })
-
-    card = {
-        "config": {"wide_screen_mode": True},
-        "header": {
-            "title": {"tag": "plain_text", "content": title},
-            "template": "blue"
-        },
-        "elements": elements
-    }
-
-    msg_body = {
-        "receive_id": target_chat,
-        "msg_type": "interactive",
-        "content": json.dumps(card)
-    }
-
-    try:
-        data = json.dumps(msg_body).encode('utf-8')
-        req = Request(FEISHU_MSG_API, data=data, headers={
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}'
-        })
-        resp = json.loads(urlopen(req, timeout=15).read())
-        ok = resp.get('code') == 0
-        print(f'  [notify] 飞书正文推送{"成功" if ok else "失败"}: {title}')
-        return ok
-    except Exception as e:
-        print(f'  [notify] 飞书正文推送异常: {e}')
-        return False
-
-
-# ============================================================
-# 兼容层 — 供现有脚本平滑迁移
+# Server酱 — 长正文推送（主通道）
 # ============================================================
 def push_serverchan_report(title, content):
     """
-    Server酱长正文推送（向后兼容）。
-    飞书未配置时的 fallback 通道。
-    长报告会按 ## 标题自动拆分为多条消息。
+    Server酱长正文推送。
+    长报告会按 ## 标题自动拆分为多条消息（Server酱单条限制25000字符）。
     """
     if not SERVERCHAN_KEY:
         print(f'  [notify] Server酱 key 未配置，跳过报告推送')
