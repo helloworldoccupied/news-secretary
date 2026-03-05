@@ -1283,7 +1283,7 @@ window.addEventListener('resize', function() {{
 # ============================================================
 CHART_SECTION_MAP = {
     'market_overview': {
-        'keywords': ['市场概览', '市场快照', 'market', 'overview', '行情', '价格', '涨跌', 'price'],
+        'keywords': ['市场', 'market', 'btc', 'eth', '行情', '价格', '涨跌', '全景', '概览', '快照', '总览'],
         'data_check': lambda d: d.get('coin_changes') or d.get('fear_greed_value'),
         'html': '''<div class="inline-chart" aria-label="市场概览图表">
   <div class="chart-row">
@@ -1293,7 +1293,7 @@ CHART_SECTION_MAP = {
 </div>''',
     },
     'derivatives': {
-        'keywords': ['衍生品', '费率', 'funding', 'derivative', '资金费', '合约', 'perpetual'],
+        'keywords': ['衍生品', '费率', 'funding', 'derivative', '资金费', '合约', '永续', '多空'],
         'data_check': lambda d: d.get('funding_rates'),
         'html': '''<div class="inline-chart" aria-label="资金费率图表">
   <div class="chart-label">三所资金费率热力图 (%, 8h)</div>
@@ -1301,7 +1301,7 @@ CHART_SECTION_MAP = {
 </div>''',
     },
     'onchain': {
-        'keywords': ['链上', 'on-chain', 'onchain', 'puell', 'nvt', '基本面', 'fundamental'],
+        'keywords': ['链上', 'on-chain', 'onchain', 'puell', 'nvt', '基本面', '估值', '矿工'],
         'data_check': lambda d: d.get('puell_multiple') or d.get('nvt_ratio'),
         'html': '''<div class="inline-chart" aria-label="链上指标图表">
   <div class="chart-label">链上估值指标</div>
