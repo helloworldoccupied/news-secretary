@@ -1283,8 +1283,9 @@ window.addEventListener('resize', function() {{
 # ============================================================
 CHART_SECTION_MAP = {
     'market_overview': {
-        'keywords': ['市场概览', '市场快照', 'Market', 'Overview', '行情', '价格', '涨跌', 'Price'],
-        'html': '''<div class="inline-chart">
+        'keywords': ['市场概览', '市场快照', 'market', 'overview', '行情', '价格', '涨跌', 'price'],
+        'data_check': lambda d: d.get('coin_changes') or d.get('fear_greed_value'),
+        'html': '''<div class="inline-chart" aria-label="市场概览图表">
   <div class="chart-row">
     <div class="chart-half"><div class="chart-label">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
     <div class="chart-half"><div class="chart-label">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
@@ -1292,15 +1293,17 @@ CHART_SECTION_MAP = {
 </div>''',
     },
     'derivatives': {
-        'keywords': ['衍生品', '费率', 'Funding', 'Derivative', '资金费', '合约', 'Perpetual'],
-        'html': '''<div class="inline-chart">
+        'keywords': ['衍生品', '费率', 'funding', 'derivative', '资金费', '合约', 'perpetual'],
+        'data_check': lambda d: d.get('funding_rates'),
+        'html': '''<div class="inline-chart" aria-label="资金费率图表">
   <div class="chart-label">三所资金费率热力图 (%, 8h)</div>
   <div id="chart-funding-rates" class="chart-heatmap"></div>
 </div>''',
     },
     'onchain': {
-        'keywords': ['链上', 'On-chain', 'Onchain', 'Puell', 'NVT', '基本面', 'Fundamental'],
-        'html': '''<div class="inline-chart">
+        'keywords': ['链上', 'on-chain', 'onchain', 'puell', 'nvt', '基本面', 'fundamental'],
+        'data_check': lambda d: d.get('puell_multiple') or d.get('nvt_ratio'),
+        'html': '''<div class="inline-chart" aria-label="链上指标图表">
   <div class="chart-label">链上估值指标</div>
   <div id="chart-onchain" class="chart-dual-gauge"></div>
 </div>''',
@@ -1310,10 +1313,8 @@ CHART_SECTION_MAP = {
 
 def _build_interleaved_html(report_text, chart_data):
     """将分析报告按章节拆分，在对应章节后插入图表，实现图文一体化"""
-    # 按 ## 拆分章节
     sections = re.split(r'^(## .+)$', report_text, flags=re.MULTILINE)
 
-    # sections交替：[前导文字, "## 标题1", 内容1, "## 标题2", 内容2, ...]
     result_parts = []
     charts_used = set()
 
@@ -1322,23 +1323,23 @@ def _build_interleaved_html(report_text, chart_data):
         if not part:
             continue
 
-        # 转换markdown为HTML
         part_html = _md_to_html(part)
         result_parts.append(part_html)
 
-        # 如果这是一个## 标题行，检查下一个content部分后是否需要插入图表
         if part.startswith('## '):
-            # 找到对应的图表（在标题后面插入）
             for chart_key, chart_info in CHART_SECTION_MAP.items():
                 if chart_key in charts_used:
                     continue
-                if any(kw.lower() in part.lower() for kw in chart_info['keywords']):
-                    # 找到匹配——但先输出该章节的内容，再插图表
-                    # 内容在sections[i+1]，会在下一次循环输出
-                    # 所以我们标记这个chart，在下一个非标题part之后插入
+                # 数据验证：对应数据为空则跳过该图表
+                data_ok = chart_info.get('data_check', lambda d: True)(chart_data)
+                if not data_ok:
+                    print(f'  [CHART] {chart_key}: skipped (no data)')
+                    charts_used.add(chart_key)  # 标记为已处理，不再匹配
+                    continue
+                if any(kw in part.lower() for kw in chart_info['keywords']):
                     charts_used.add(chart_key)
-                    # 用特殊标记，在内容输出后插入
                     result_parts.append(f'<!--CHART:{chart_key}-->')
+                    print(f'  [CHART] {chart_key}: matched → "{part.strip()[:40]}"')
                     break
 
     # 后处理：将<!--CHART:xxx-->替换为实际图表HTML
