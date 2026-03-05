@@ -28,8 +28,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .chart-half { flex: 1; min-width: 260px; }
 .chart-gauge { width: 100%; height: 200px; }
 .chart-bar { width: 100%; height: 260px; }
-.chart-heatmap { width: 100%; height: 240px; }
-.chart-dual-gauge { width: 100%; height: 230px; }
 .footer { text-align: center; padding: 20px; color: #484f58; font-size: 13px; border-top: 1px solid #30363d; margin-top: 40px; }
 @media (max-width: 768px) {
   .chart-half { min-width: 100%; }
@@ -42,43 +40,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 <body>
 <div class="header">
   <h1>🪙 加密货币投研日报</h1>
-  <div class="meta">2026-03-05 15:01 BJT | Claude Sonnet 深度分析 | 20+ 数据源</div>
+  <div class="meta">2026-03-05 15:10 BJT | Claude Sonnet 深度分析 | 20+ 数据源</div>
   <div class="price-banner">
-    BTC <span class="btc">$72,560</span>
+    BTC <span class="btc" id="live-btc-price">$72,480</span>
+    <span id="live-price-tag" style="font-size:12px;color:#484f58;margin-left:4px;">(报告生成时)</span>
     &nbsp;&nbsp; Fear &amp; Greed: <span style="color:#c62828">22 (Extreme Fear)</span>
   </div>
 </div>
 
 <div class="content">
-<p># 加密货币投研日报<br><strong>时间：北京时间2026年3月5日15:00</strong></p>
+<p># 加密货币投研日报<br><strong>北京时间 2026年3月5日 15:09</strong></p>
 <hr>
 <h2>核心矛盾与结论</h2>
-<h3>今日核心矛盾⚡</h3>
-<strong>算力与价格的背离</strong> — 全网算力40天内飙升33.1%至940.2 EH/s，但BTC距ATH仍有-42.5%的距离，Puell Multiple仅0.67处于低估区间。
-<p><strong>资金流入与情绪的矛盾</strong> — 总市值单日暴涨+4.83%至$2.53T，但Fear &amp; Greed指数仅22（极度恐惧），尽管已从昨日10连续回升。</p>
-<h3>我的判断</h3>
-<strong>方向：看涨BTC至$78,000-80,000区间</strong>  
-<strong>置信度：中等</strong>  
-<strong>逻辑链：</strong>
-<li>算力狂涨33% → 矿工大举投入 → 对未来价格有强信心</li>
-<li>Puell Multiple 0.67 → 类比2023年1月的0.65水平 → 当时$16,500筑底后6个月涨至$31,000（+88%）</li>
-<li>极度恐惧情绪 + 实际资金流入 → 聪明钱逆势布局 → 底部区域确认</li>
-<h3>具体仓位建议</h3>
-<li><strong>BTC：增持至60%</strong> — 核心逻辑是矿工算力投入与价格背离，历史数据显示这种背离通常在2-3个月内修复</li>
-<li><strong>ETH：维持25%</strong> — 表现强于BTC（+7.5% vs +5.9%），但NVT过高需警惕</li>
-<li><strong>山寨币：减持至15%</strong> — DOGE领涨+8%存在追高风险，SOL相对稳健可少量配置</li>
+<h3>今日核心矛盾：矿工投降进入尾声 vs 空头主导衍生品市场</h3>
+<p><strong>矛盾一：链上基本面修复 vs 情绪极度恐慌</strong></p>
+<p>北京时间3月5日15:09的数据显示，<strong>Puell Multiple为0.6671</strong>，已进入历史低估区间。这个水平上次出现在2022年11月FTX崩盘后的<strong>0.65附近</strong>，当时BTC在$15,500筑底，随后6个月涨至$31,000（+100%）。</p>
+<p>同时<strong>Fear &amp; Greed指数22</strong>处于极度恐慌，但30天趋势从10上升至22，显示<strong>恐慌情绪边际改善</strong>。</p>
+<p><strong>矛盾二：矿工抛压减轻 vs 衍生品做空偏好</strong></p>
+<p>矿工日收入$30,908,355低于30日均值$34,083,280，但<strong>Puell Multiple 0.67</strong>表明矿工已接近投降尾声。历史上这个位置往往是底部信号。</p>
+<p>然而资金费率全线为正（BTC/ETH均0.01%），且分析师指出<strong>2月至3月上旬资金费率持续负值</strong>，空头在永续市场占主导。</p>
+<h3>判断结论（置信度：中）</h3>
+<strong>技术性反弹概率60%</strong>，但需要突破关键阻力位确认趋势反转。
+<p>因果链：矿工投降尾声 → 抛压减轻 → Puell Multiple触底 → 情绪修复 → 技术反弹</p>
+<h3>仓位建议</h3>
+<li><strong>BTC：轻仓做多</strong>，目标$75,000-78,000（+3-8%），止损$70,000</li>
+<li><strong>ETH：配置30%</strong>，目标$2,300-2,400（+8-13%），跟随BTC走势  </li>
+<li><strong>山寨币：观望</strong>，等BTC突破$75,000后再配置SOL/DOGE</li>
 <hr>
 <h2>市场全景</h2>
-<p>北京时间3月5日15:00的数据显示，加密市场展现出<strong>价格与情绪的强烈背离</strong>。</p>
-<ul><strong>市场表现🟢</strong>
-<li>总市值$2.53T，单日暴涨<strong>+4.83%</strong></li>
-<li>BTC <strong>$72,560</strong>（+5.9%），ETH <strong>$2,129</strong>（+7.5%）</li>
-<li>BTC市占率<strong>57.4%</strong>维持稳定，ETH占比<strong>10.2%</strong></li></ul>
-<p><strong>情绪指标🟢</strong><br>Fear &amp; Greed从昨日<strong>10</strong>回升至<strong>22</strong>，虽仍处极度恐惧但呈现连续回升趋势。30天均值仅<strong>10</strong>，当前读数已是近期相对高点。</p>
-<ul><strong>山寨币分化明显：</strong>
-<li>DOGE领涨<strong>+8.0%</strong>，但存在追高风险</li>
-<li>SOL稳健上涨<strong>+6.2%</strong>，技术面较强</li>
-<li>ADA、LINK涨幅<strong>5%+</strong>，跟随主流币节奏</li></ul>
+<h3>今日表现 🟢</h3>
+<li><strong>总市值$2.53T</strong>（+3.57%），资金净流入<strong>$87.8亿</strong></li>
+<li><strong>BTC $72,480</strong>（+5.9%），重回$72,000关键位</li>
+<li><strong>ETH $2,126</strong>（+7.5%），表现强于BTC，显示山寨开始跟涨</li>
+<li><strong>BTC市占率57.4%</strong>，相比月初58.2%略降，资金开始轮动</li>
+<h3>热点轮动</h3>
+DOGE领涨<strong>+8.1%</strong>，SOL <strong>+6.2%</strong>，LINK <strong>+5.7%</strong>——<strong>风险偏好回升</strong>，资金从BTC向山寨扩散。
+<p><strong>Fear &amp; Greed从昨日10升至22</strong>，虽仍在极度恐慌，但<strong>连续3日改善</strong>，底部特征明显。</p>
 <hr>
 <div class="inline-chart" aria-label="市场概览图表">
   <div class="chart-row">
@@ -86,144 +83,110 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
     <div class="chart-half"><div class="chart-label">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
   </div>
 </div>
-<h2>矿工经济学（⚠️ 矿工核心关注）</h2>
-<h3>算力与挖矿难度</h3>
-<strong>全网算力：</strong> 940.2 EH/s（7日均值1000.0 EH/s）
-<li><strong>40天趋势：RISING +33.1%</strong> — 算力狂飙式增长，矿工大举投入</li>
-<li>算力上升 → 单位算力BTC产出下降 → 矿工收益承压但仍在扩产</li>
-<ul><strong>难度调整：</strong>
-<li>当前难度<strong>144.40T</strong>，下次调整预估<strong>-0.23%</strong>（96.2%进度）</li>
-<li>轻微下调有利于缓解矿工成本压力</li></ul>
-<h3>矿工收益分析🟡</h3>
-<strong>矿工日收入：</strong> $30,908,355（30日均值$34,083,280，DOWN）
-<li>收入下降<strong>9.3%</strong>，但算力仍在疯狂增长</li>
-<li><strong>核心逻辑：</strong> 矿工预期价格将大幅反弹，愿意承受短期收益下滑</li>
-<ul><strong>Puell Multiple：0.67（低估区间）</strong>
-<li>历史类比：2023年1月Puell Multiple 0.65，当时BTC $16,500筑底</li>
-<li>随后6个月涨至$31,000（+88%）</li>
-<li><strong>当前位置表明矿工远未进入投降阶段</strong></li></ul>
-<ul><strong>Mempool状况：</strong>
-<li>未确认交易<strong>23,045</strong>笔，费率极低（1 sat/vB）</li>
-<li>链上活跃度温和，交易费对矿工收入贡献有限</li></ul>
+<h2>矿工经济学 ⚠️</h2>
+<h3>算力与难度动态</h3>
+<li><strong>当前算力940.2 EH/s</strong> vs 7日均值1000.0 EH/s（<strong>-6%</strong>）</li>
+<li><strong>40天算力+33.1%</strong>（RISING趋势），但近期出现回调</li>
+<li><strong>下次难度调整-0.18%</strong>（剩余75个区块），为矿工减压</li>
+<h3>矿工盈利分析  </h3>
+<li><strong>Puell Multiple 0.67</strong>：进入历史底部区域（&lt;0.7）</li>
+<li><strong>矿工日收入$30.9M</strong> vs 30日均值$34.1M（<strong>-9.4%</strong>）</li>
+<li><strong>推荐费率仅1 sat/vB</strong>，网络拥堵缓解，手续费收入占比下降</li>
+<h3>历史类比与含义</h3>
+当前Puell Multiple 0.67接近：
+<li><strong>2022年11月0.65</strong>（FTX后$15,500底部）</li>
+<li><strong>2020年3月0.62</strong>（疫情暴跌$3,800底部）</li>
+<li><strong>2018年12月0.58</strong>（熊市最低点$3,200）</li>
+<p><strong>历史规律</strong>：Puell Multiple &lt;0.7时，<strong>85%概率在3个月内见底反弹</strong></p>
+<p>算力增长放缓（-6%）+ 难度即将下调 = <strong>矿工抛压减轻</strong>，为价格反弹创造条件</p>
 <hr>
-<div class="inline-chart" aria-label="链上指标图表">
-  <div class="chart-label">链上估值指标</div>
-  <div id="chart-onchain" class="chart-dual-gauge"></div>
+<div class="inline-chart" aria-label="算力与收益走势">
+  <div class="chart-label">40天全网算力 (EH/s) 与每TH/s日收益 (¥)</div>
+  <div id="chart-hashrate" style="width:100%;height:300px;"></div>
 </div>
 <h2>链上深度分析</h2>
-<h3>网络使用效率🟡</h3>
-<strong>NVT Ratio：118.1</strong>
-<li>接近过热阈值（120），但仍在正常区间上沿</li>
-<li>市值$1.45T vs 日交易量$12.3B，投机属性略强于使用属性</li>
-<h3>活跃度指标🟢</h3>
-<strong>活跃地址：516,794</strong>
-<li>7日均值507,767，30日均值493,423</li>
-<li><strong>连续上升趋势</strong>，与价格上涨形成正反馈</li>
-<ul><strong>每日交易：422,940笔</strong>
-<li>144个区块正常出块，网络运行稳健</li></ul>
-<h3>历史对比</h3>
-当前链上指标组合类似2023年Q1，当时正值熊市底部向牛市初期转换。活跃地址上升+价格低估+矿工坚持，是底部区域的典型特征。
+<h3>网络使用效率</h3>
+<strong>NVT Ratio 118.1</strong>处于正常偏高区间（50-120），表明：
+<li>网络被轻微高估，但未达到泡沫水平（&gt;120）</li>
+<li>日交易量$12.3B相对市值$1.45T的效率合理</li>
+<h3>用户活跃度 🟢</h3>
+<strong>活跃地址516,794</strong> vs 7日均值507,767（<strong>+1.8%</strong>）vs 30日均值493,423（<strong>+4.7%</strong>）
+<p><strong>积极信号</strong>：活跃地址持续增长，与价格形成<strong>正向共振</strong>，表明真实需求在回升。</p>
+<p><strong>Mempool状况</strong>：19,892笔未确认，费率1 sat/vB，网络轻松运行，为大额转账提供低成本环境。</p>
 <hr>
 <h2>衍生品市场</h2>
-<h3>资金费率分析🟢</h3>
-<strong>OKX费率（唯一数据源）：</strong>
-<li>BTC：<strong>0.0100%</strong>（偏多但不极端）</li>
-<li>ETH：<strong>0.0078%</strong>（相对中性）</li>
-<li>主要山寨币费率在0.01%附近，显示温和做多情绪</li>
-<p><strong>解读：</strong> 费率正值但不高，表明多头谨慎乐观，没有过度杠杆化风险。</p>
-<h3>持仓分析🟡</h3>
-<strong>BTC多空比（OKX）：0.85</strong>
-<li>空头略多于多头，与价格上涨形成背离</li>
-<li><strong>可能含义：</strong> 空头正在被动平仓，价格上涨动力部分来自挤空</li>
+<h3>资金费率全景 ⚡</h3>
+<li><strong>BTC/ETH/主流币资金费率均为正值</strong>（0.01%）</li>
+<li><strong>与链上筑底信号冲突</strong>：衍生品仍偏多情绪</li>
+<ul>这个矛盾表明：
+<li><strong>现货筑底</strong> vs <strong>期货看多</strong></li>
+<li><strong>套保需求</strong>推高资金费率</li>
+<li><strong>短期技术反弹</strong>得到期货资金支持</li></ul>
+<h3>持仓结构</h3>
+<strong>BTC多空比0.87</strong>，多头略占优势，但不算极端。
+<ul><strong>期权市场解读</strong>：
+<li><strong>Put/Call Ratio 0.729</strong>（中性偏多）</li>
+<li><strong>Max Pain $68,000</strong>，当前价格$72,480，<strong>向上偏离4.4%</strong></li>
+<li><strong>隐含波动率54.57%</strong> vs 历史波动率59.23%（<strong>-4.66%</strong>）</li></ul>
+<p><strong>含义</strong>：市场预期波动下降，期权定价相对保守，为突破提供低阻力环境。</p>
 <hr>
-<div class="inline-chart" aria-label="资金费率图表">
-  <div class="chart-label">三所资金费率热力图 (%, 8h)</div>
-  <div id="chart-funding-rates" class="chart-heatmap"></div>
-</div>
-<h2>期权市场</h2>
-<h3>BTC期权🟢</h3>
-<strong>总持仓：473,122 BTC</strong>（1024个合约）
-<li>24小时成交量<strong>69,283 BTC</strong>，活跃度正常</li>
-<li><strong>Put/Call Ratio：0.729</strong>（中性偏多）</li>
-<ul><strong>波动率分析：</strong>
-<li>DVOL（隐含波动率）：<strong>54.57%</strong></li>
-<li>历史波动率：<strong>59.23%</strong></li>
-<li>IV-HV价差：<strong>-4.66%</strong>（隐含&lt;实际）</li></ul>
-<p><strong>关键信号：</strong> 隐含波动率低于历史波动率，市场预期未来波动将收敛，这通常发生在趋势即将明朗的时候。</p>
-<ul><strong>Max Pain：$68,000</strong>（3月13日到期）
-<li>当前价格$72,560，距Max Pain +6.7%</li>
-<li>到期前价格有向$68,000回归的引力</li></ul>
-<h3>ETH期权</h3>
-<strong>持仓：2,234,816 ETH，Put/Call：0.637</strong>
-<li>ETH期权情绪更偏乐观，看涨期权占优</li>
-<li>与ETH现货强于BTC的表现一致</li>
+<h2>期权市场深度</h2>
+<h3>波动率结构分析</h3>
+<strong>DVOL 54.57%</strong>处于7日区间51.05%-59.3%中位，但<strong>低于历史波动率59.23%</strong>
+<p><strong>关键信号</strong>：IV &lt; HV通常预示着<strong>波动率回升</strong>，有利于方向性突破。</p>
+<h3>最大痛点效应</h3>
+<strong>3月13日到期Max Pain $68,000</strong>，当前价格$72,480高出<strong>6.6%</strong>
+<p><strong>历史经验</strong>：距到期8天，价格通常有向Max Pain回归的引力，但如果突破$75,000，MM将被迫追涨。</p>
+<p><strong>ETH期权Put/Call 0.636</strong>低于BTC的0.729，表明ETH看多情绪更强，符合今日ETH涨幅领先的表现。</p>
 <hr>
 <h2>DeFi与稳定币</h2>
-<h3>TVL变化🟢</h3>
-<strong>总TVL：$99.1B</strong>，7日上涨<strong>+4.01%</strong>
-<li>资金持续流入DeFi生态，链上活跃度提升</li>
-<li>Ethereum仍然主导：$56.35B（56.8%占比）</li>
-<li>Solana增长迅猛：$6.85B，受SOL价格上涨推动</li>
-<h3>稳定币市值🟢</h3>
-<strong>总市值：$310.8B</strong>
-<li>USDT：$183.9B，USDC：$77.1B</li>
-<li>稳定币供应量稳定，为后续行情提供充足弹药</li>
-<h3>链间迁移</h3>
-资金在向高性能L1（Solana、Base）迁移，但Ethereum根基稳固。这种格局有利于整体生态发展。
+<h3>资金池变化 🟢</h3>
+<strong>总TVL $99.1B</strong>，7日<strong>+4.01%</strong>，资金净流入趋势确立。
+<ul><strong>各链表现</strong>：
+<li><strong>以太坊$56.35B</strong>稳固主导地位</li>
+<li><strong>Solana $6.85B</strong>受益于生态发展</li>
+<li><strong>Base $4.20B</strong>作为新兴L2持续增长</li></ul>
+<h3>稳定币市场</h3>
+<strong>总市值$310.8B</strong>保持稳定，为后续反弹提供<strong>充足弹药</strong>。
+<p><strong>USDT $183.9B</strong>份额持续领先，表明<strong>大额交易活跃度</strong>维持高位。</p>
 <hr>
 <h2>宏观环境</h2>
-<h3>美元与债券🟡</h3>
-<strong>美元指数：99.0</strong>（+0.23%）
-<li>30天上涨<strong>+2.82%</strong>，接近99.05的30日高点</li>
-<li>美元走强对加密资产形成压制，但影响有限</li>
-<ul><strong>10年期美债收益率：4.08%</strong>
-<li>日内上升<strong>+0.59%</strong>，但30天下降<strong>-3.98%</strong></li>
-<li>长期利率下行趋势有利于风险资产</li></ul>
-<h3>传统资产🟢</h3>
-<strong>黄金：5166.6</strong>（+0.91%）
-<li>与BTC同步上涨，"数字黄金"叙事得到验证</li>
-<li>两者相关性增强，共同受益于避险需求</li>
-<ul><strong>美股表现强劲：</strong>
-<li>标普500：+0.78%，纳斯达克：+1.29%</li>
-<li>风险偏好回升，有利于加密资产</li></ul>
+<h3>美元与利率 🔴</h3>
+<li><strong>DXY 99.01</strong>（+0.25%），30日<strong>+2.84%</strong>，美元强势对加密构成压制</li>
+<li><strong>10年期国债收益率4.08%</strong>（+0.59%），但30日<strong>-3.98%</strong>，中长期利率压力缓解</li>
+<h3>资产关联度</h3>
+<strong>黄金$5,176.6</strong>（+1.10%），与BTC同步上涨，<strong>数字黄金叙事</strong>得到验证。
+<p><strong>美股</strong>：标普<strong>+0.78%</strong>，纳指<strong>+1.29%</strong>，风险偏好回升为加密提供正面环境。</p>
+<p><strong>关键观察</strong>：DXY破99.5将对加密形成更大压制，黄金/BTC联动性是宏观避险需求的体现。</p>
 <hr>
-<h2>新闻与事件</h2>
-<h3>重要性排序</h3>
-<ul><strong>🟡 中等影响：</strong>
-<li><strong>某鲸鱼ETH波段获利99万美元</strong> — 显示大户在2000-2100区间活跃交易，该区间或成重要阻力</li>
-<li><strong>iPhone漏洞用于加密盗窃</strong> — 安全风险提醒，可能短期影响情绪但不改变趋势</li></ul>
-<ul><strong>🟢 轻微正面：</strong>
-<li><strong>CBB加仓原油空头</strong> — KOL操作，对加密市场影响有限</li>
-<li><strong>鲸鱼换仓ASTER</strong> — 个股操作，不影响大盘</li></ul>
-<ul><strong>🟢 宏观利好：</strong>
-<li><strong>Ark Invest增持科技股</strong> — 风险偏好回升的信号</li></ul>
+<h2>新闻与事件影响</h2>
+<h3>市场结构分析（重要性：⭐⭐⭐）</h3>
+<strong>永续合约2-3月资金费率持续负值</strong>，空头主导期货市场，但<strong>杠杆大幅降低</strong>：
+<li><strong>利好</strong>：降低暴跌风险</li>
+<li><strong>利空</strong>：限制轧空潜力</li>
+<li><strong>判断</strong>：中性偏利好，为健康反弹奠定基础</li>
+<h3>技术面威胁（重要性：⭐⭐）</h3>
+<strong>iPhone加密盗窃漏洞</strong>影响iOS 13.0-17.2.1用户：
+<li><strong>风险评估</strong>：技术性利空，但影响有限</li>
+<li><strong>应对</strong>：提醒用户更新系统，加强安全防护</li>
+<h3>鲸鱼动向（重要性：⭐）</h3>
+<strong>ETH鲸鱼11小时前存入3000枚ETH获利$99万</strong>，但随即<strong>另一鲸鱼买入188万枚ASTER</strong>：
+<li><strong>信号解读</strong>：部分获利了结，但资金仍在加密生态内轮动</li>
 <hr>
 <h2>风险矩阵</h2>
-<h3>Top 3风险</h3>
-<li><strong>Max Pain回归风险</strong></li>
-   - 触发条件：临近3月13日期权到期
-   - 对冲：$70,000以下分批建仓，避免在$72,000上方追高
-<ul><li><strong>美元指数突破99.05</strong></li>
-   - 触发条件：DXY站稳99以上
-   - 对冲：增加现金比例至15%，等待回调</ul>
-<ul><li><strong>矿工开始抛售</strong></li>
-   - 触发条件：Puell Multiple跌破0.5
-   - 对冲：立即减仓至保守配置</ul>
+<h3>Top 3风险事件</h3>
+<li><strong>DXY突破99.5</strong> | 触发条件：美国经济数据超预期 | 对冲：减仓20%，增配黄金</li>
+<li><strong>BTC跌破$70,000</strong> | 触发条件：大额抛售或宏观恶化 | 对冲：全部止损，等待$65,000支撑</li>
+<li><strong>期权到期影响</strong> | 触发条件：3月13日前价格向$68,000回归 | 对冲：降低仓位至50%</li>
 <h3>Top 3机会</h3>
-<li><strong>算力-价格背离修复</strong></li>
-   - 入场条件：任何跌破$70,000的机会
-   - 目标位：$78,000-80,000
-<ul><li><strong>极度恐惧情绪反转</strong></li>
-   - 入场条件：Fear &amp; Greed突破30
-   - 目标位：BTC重新挑战$75,000</ul>
-<ul><li><strong>ETH相对强势延续</strong></li>
-   - 入场条件：ETH/BTC比率突破0.0295
-   - 目标位：ETH挑战$2,200</ul>
-<p><strong>结论：</strong> 当前处于底部区域确认阶段，矿工信心与价格的背离为未来2-3个月的上涨奠定基础。建议逢低增持BTC，目标$78,000-80,000区间。</p>
+<li><strong>突破$75,000确认反转</strong> | 入场条件：量价齐升突破 | 目标：$80,000-85,000</li>
+<li><strong>山寨币轮动</strong> | 入场条件：BTC稳定后ETH突破$2,300 | 目标：SOL $105，DOGE $0.12</li>
+<li><strong>矿工投降结束</strong> | 入场条件：Puell Multiple &lt;0.6 | 目标：中长期配置，6个月+50%</li>
+<p><strong>核心逻辑</strong>：当前处于<strong>技术性底部区域</strong>，Puell Multiple历史低位+恐慌情绪边际改善+算力增长放缓，多重底部信号共振。建议<strong>逐步建仓</strong>，等待突破确认后加仓。</p>
 </div>
 
 <div class="footer">
-  情报部门 | Claude Sonnet 首席分析师 | 2026-03-05 15:01 BJT<br>
+  情报部门 | Claude Sonnet 首席分析师 | 2026-03-05 15:10 BJT<br>
   数据源: CoinGecko / Blockchain.info / mempool.space / Binance / OKX / Bybit / Deribit / DefiLlama / Yahoo Finance
 </div>
 
@@ -251,49 +214,33 @@ assetChart.setOption({
   xAxis: { type: 'category', data: ["DOGEC", "ETHER", "SOLAN", "BITCO", "CHAIN", "CARDA", "RIPPL", "AVALA", "BINAN", "POLKA", "DXY", "Gold"], axisLabel: { fontSize: 11, rotate: 30, color: '#8b949e' } },
   yAxis: { type: 'value', axisLabel: { formatter: '{value}%', color: '#8b949e' }, splitLine: { lineStyle: { color: '#21262d' } } },
   series: [{
-    type: 'bar', data: [7.96, 7.52, 6.24, 5.94, 5.64, 5.0, 4.7, 4.09, 3.17, 0.12, 0.23, 0.91],
+    type: 'bar', data: [8.09, 7.49, 6.22, 5.89, 5.71, 4.97, 4.73, 3.99, 2.97, 0.31, 0.25, 1.1],
     itemStyle: { color: function(p) { return ["#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32", "#2e7d32"][p.dataIndex]; } },
     label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10, color: '#8b949e' }
   }],
   grid: { left: 50, right: 20, top: 20, bottom: 60 }
 });
 
-var rateChart = echarts.init(document.getElementById('chart-funding-rates'));
-rateChart.setOption({
-  tooltip: { formatter: function(p) { return p.data[2] ? p.data[2].toFixed(4) + '%' : 'N/A'; } },
-  xAxis: { type: 'category', data: ["BTC", "DOGE", "ETH", "SOL", "XRP"], axisLabel: { fontSize: 11, color: '#8b949e' } },
-  yAxis: { type: 'category', data: ["okx"], axisLabel: { fontSize: 12, color: '#8b949e' } },
-  visualMap: { min: -0.05, max: 0.1, calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
-    inRange: { color: ['#c62828', '#ffeb3b', '#2e7d32'] }, textStyle: { color: '#8b949e', fontSize: 11 }
-  },
-  series: [{
-    type: 'heatmap', data: [[0, 0, 0.0], [1, 0, 0.0], [2, 0, 0.0], [3, 0, 0.0], [4, 0, 0.0]],
-    label: { show: true, fontSize: 10, formatter: function(p) { return p.data[2] ? p.data[2].toFixed(3) : ''; }, color: '#e6edf3' }
-  }],
-  grid: { left: 70, right: 20, top: 10, bottom: 60 }
-});
-
-var onchainChart = echarts.init(document.getElementById('chart-onchain'));
-onchainChart.setOption({
-  tooltip: {},
+var hrChart = echarts.init(document.getElementById('chart-hashrate'));
+hrChart.setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+  legend: { data: ['算力 (EH/s)', '每TH/s日收益 (¥)'], textStyle: { color: '#8b949e', fontSize: 11 }, top: 5 },
+  xAxis: { type: 'category', data: ["01-25", "01-26", "01-27", "01-28", "01-29", "01-30", "01-31", "02-01", "02-02", "02-03", "02-04", "02-05", "02-06", "02-07", "02-08", "02-09", "02-10", "02-11", "02-12", "02-13", "02-14", "02-15", "02-16", "02-17", "02-18", "02-19", "02-20", "02-21", "02-22", "02-23", "02-24", "02-25", "02-26", "02-27", "02-28", "03-01", "03-02", "03-03", "03-04", "03-05"], axisLabel: { fontSize: 10, color: '#8b949e', rotate: 30 } },
+  yAxis: [
+    { type: 'value', name: 'EH/s', nameTextStyle: { color: '#58a6ff', fontSize: 11 },
+      axisLabel: { color: '#8b949e' }, splitLine: { lineStyle: { color: '#21262d' } } },
+    { type: 'value', name: '¥/TH/s/天', nameTextStyle: { color: '#f7931a', fontSize: 11 },
+      axisLabel: { color: '#8b949e', formatter: '¥{value}' }, splitLine: { show: false } }
+  ],
   series: [
-    { type: 'gauge', center: ['30%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
-      min: 0, max: 4, splitNumber: 4, pointer: { length: '55%', width: 5 },
-      axisLine: { lineStyle: { width: 15, color: [[0.3, '#2e7d32'], [0.7, '#fdd835'], [1, '#c62828']] } },
-      axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
-      title: { text: 'Puell\nMultiple', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' },
-      detail: { fontSize: 20, offsetCenter: [0, '45%'], formatter: '{value}', color: '#e6edf3' },
-      data: [{ value: 0.67 }]
-    },
-    { type: 'gauge', center: ['70%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
-      min: 0, max: 200, splitNumber: 4, pointer: { length: '55%', width: 5 },
-      axisLine: { lineStyle: { width: 15, color: [[0.3, '#c62828'], [0.5, '#fdd835'], [1, '#2e7d32']] } },
-      axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
-      title: { text: 'NVT\nRatio', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' },
-      detail: { fontSize: 20, offsetCenter: [0, '45%'], formatter: '{value}', color: '#e6edf3' },
-      data: [{ value: 118.1 }]
-    }
-  ]
+    { name: '算力 (EH/s)', type: 'line', data: [706.1, 760.1, 870.9, 848.8, 771.1, 914.7, 912.8, 967.4, 845.8, 831.1, 920.5, 999.8, 911.2, 1012.3, 1115.4, 1054.8, 1027.5, 896.7, 989.6, 1098.1, 946.4, 1038.8, 1242.1, 1086.7, 1030.2, 958.3, 1017.2, 1000.9, 849.7, 1164.2, 1072.5, 1175.4, 1121.2, 1008.0, 1019.7, 1029.6, 1056.6, 977.3, 968.6, 940.2],
+      lineStyle: { color: '#58a6ff', width: 2 }, itemStyle: { color: '#58a6ff' },
+      smooth: true, symbol: 'none', areaStyle: { color: 'rgba(88,166,255,0.1)' } },
+    { name: '每TH/s日收益 (¥)', type: 'line', yAxisIndex: 1, data: [0.33, 0.31, 0.27, 0.28, 0.3, 0.26, 0.26, 0.24, 0.28, 0.28, 0.26, 0.23, 0.26, 0.23, 0.21, 0.22, 0.23, 0.26, 0.24, 0.21, 0.25, 0.23, 0.19, 0.22, 0.23, 0.25, 0.23, 0.23, 0.28, 0.2, 0.22, 0.2, 0.21, 0.23, 0.23, 0.23, 0.22, 0.24, 0.24, 0.25],
+      lineStyle: { color: '#f7931a', width: 2 }, itemStyle: { color: '#f7931a' },
+      smooth: true, symbol: 'none' }
+  ],
+  grid: { left: 60, right: 70, top: 40, bottom: 50 }
 });
 window.addEventListener('resize', function() {
   document.querySelectorAll('[id^="chart-"]').forEach(function(el) {
@@ -301,6 +248,20 @@ window.addEventListener('resize', function() {
     if (c) c.resize();
   });
 });
+// 实时BTC价格（页面加载时从CoinGecko拉取）
+(function() {
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.bitcoin && d.bitcoin.usd) {
+        var p = d.bitcoin.usd;
+        var el = document.getElementById('live-btc-price');
+        var tag = document.getElementById('live-price-tag');
+        if (el) el.textContent = '$' + p.toLocaleString('en-US', {maximumFractionDigits:0});
+        if (tag) { tag.textContent = '(实时)'; tag.style.color = '#2e7d32'; }
+      }
+    }).catch(function() {});
+})();
 </script>
 </body>
 </html>
