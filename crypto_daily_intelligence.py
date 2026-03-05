@@ -248,6 +248,14 @@ def collect_mining_difficulty():
                 'data_points': len(recent),
                 'trend': 'RISING' if change_40d > 3 else ('FALLING' if change_40d < -3 else 'STABLE'),
             }
+            # 保存每日数据点供图表使用
+            daily_points = []
+            for pt in recent:
+                ts = pt.get('timestamp', 0)
+                hr_eh = pt.get('avgHashrate', 0) / 1e18
+                date_str_pt = datetime.fromtimestamp(ts, tz=BJT).strftime('%m-%d') if ts else ''
+                daily_points.append({'date': date_str_pt, 'hashrate_eh': round(hr_eh, 1)})
+            result['hashrate_daily'] = daily_points
         # 当前难度
         if hr_data.get('currentDifficulty'):
             result['current_difficulty'] = hr_data['currentDifficulty']
@@ -1132,7 +1140,7 @@ def format_data_context(market, onchain, mining, funding, oi_ls, options, defi, 
 PREVIEW_URL = 'https://helloworldoccupied.github.io/news-secretary/'
 
 
-def generate_preview_html(report_text, market, onchain, funding, options, defi, macro, sentiment):
+def generate_preview_html(report_text, market, onchain, mining, funding, options, defi, macro, sentiment):
     """生成图文一体化HTML预览 — 图表嵌入对应文字章节中间，不分离"""
 
     # ===== 提取图表数据 =====
@@ -1160,32 +1168,15 @@ def generate_preview_html(report_text, market, onchain, funding, options, defi, 
         chart_data['fear_greed_value'] = int(fg.get('value', 50))
         chart_data['fear_greed_label'] = fg.get('classification', 'Neutral')
 
-    chart_data['funding_rates'] = {}
-    for exch in ['binance', 'okx', 'bybit']:
-        rates = funding.get(exch, {})
-        if rates and isinstance(rates, dict):
-            cleaned = {}
-            for k, v in list(rates.items())[:8]:
-                try:
-                    cleaned[k] = float(v) if isinstance(v, (int, float, str)) else 0
-                except:
-                    cleaned[k] = 0
-            chart_data['funding_rates'][exch] = cleaned
-
     for k in ['DXY', 'Gold', 'US10Y', 'SPX', 'Nasdaq']:
         macro_item = macro.get(k, {})
         if macro_item:
             chart_data[f'macro_{k.lower()}'] = macro_item.get('price', 0)
             chart_data[f'macro_{k.lower()}_change'] = macro_item.get('change_pct', macro_item.get('change_1d', 0))
 
-    if options.get('btc_options'):
-        chart_data['put_call_ratio'] = options['btc_options'].get('put_call_ratio', 0)
-    if options.get('dvol'):
-        chart_data['dvol'] = options['dvol'].get('current', 0)
-
-    chart_data['puell_multiple'] = onchain.get('puell_multiple', 0)
-    chart_data['nvt_ratio'] = onchain.get('nvt_ratio', 0)
-    chart_data['defi_tvl'] = defi.get('tvl_current', 0)
+    # 40天算力+每TH/s收益数据（矿工经济学图表）
+    chart_data['hashrate_daily'] = mining.get('hashrate_daily', [])
+    chart_data['btc_price_usd'] = chart_data.get('btc_price', 0)
 
     # ===== 生成ECharts JS =====
     charts_js = _build_charts_js(chart_data)
@@ -1229,8 +1220,6 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 .chart-half {{ flex: 1; min-width: 260px; }}
 .chart-gauge {{ width: 100%; height: 200px; }}
 .chart-bar {{ width: 100%; height: 260px; }}
-.chart-heatmap {{ width: 100%; height: 240px; }}
-.chart-dual-gauge {{ width: 100%; height: 230px; }}
 .footer {{ text-align: center; padding: 20px; color: #484f58; font-size: 13px; border-top: 1px solid #30363d; margin-top: 40px; }}
 @media (max-width: 768px) {{
   .chart-half {{ min-width: 100%; }}
@@ -1245,7 +1234,8 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
   <h1>🪙 加密货币投研日报</h1>
   <div class="meta">{now_bjt} | Claude Sonnet 深度分析 | 20+ 数据源</div>
   <div class="price-banner">
-    BTC <span class="btc">${btc_price:,.0f}</span>
+    BTC <span class="btc" id="live-btc-price">${btc_price:,.0f}</span>
+    <span id="live-price-tag" style="font-size:12px;color:#484f58;margin-left:4px;">(报告生成时)</span>
     &nbsp;&nbsp; Fear &amp; Greed: <span style="color:{'#c62828' if fg_val != '?' and int(fg_val) < 25 else '#ef6c00' if fg_val != '?' and int(fg_val) < 45 else '#fdd835' if fg_val != '?' and int(fg_val) < 55 else '#66bb6a' if fg_val != '?' and int(fg_val) < 75 else '#2e7d32'}">{fg_val} ({fg_lbl})</span>
   </div>
 </div>
@@ -1267,6 +1257,20 @@ window.addEventListener('resize', function() {{
     if (c) c.resize();
   }});
 }});
+// 实时BTC价格（页面加载时从CoinGecko拉取）
+(function() {{
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')
+    .then(function(r) {{ return r.json(); }})
+    .then(function(d) {{
+      if (d && d.bitcoin && d.bitcoin.usd) {{
+        var p = d.bitcoin.usd;
+        var el = document.getElementById('live-btc-price');
+        var tag = document.getElementById('live-price-tag');
+        if (el) el.textContent = '$' + p.toLocaleString('en-US', {{maximumFractionDigits:0}});
+        if (tag) {{ tag.textContent = '(实时)'; tag.style.color = '#2e7d32'; }}
+      }}
+    }}).catch(function() {{}});
+}})();
 </script>
 </body>
 </html>'''
@@ -1292,20 +1296,12 @@ CHART_SECTION_MAP = {
   </div>
 </div>''',
     },
-    'derivatives': {
-        'keywords': ['衍生品', '费率', 'funding', 'derivative', '资金费', '合约', '永续', '多空'],
-        'data_check': lambda d: d.get('funding_rates'),
-        'html': '''<div class="inline-chart" aria-label="资金费率图表">
-  <div class="chart-label">三所资金费率热力图 (%, 8h)</div>
-  <div id="chart-funding-rates" class="chart-heatmap"></div>
-</div>''',
-    },
-    'onchain': {
-        'keywords': ['链上', 'on-chain', 'onchain', 'puell', 'nvt', '基本面', '估值', '矿工'],
-        'data_check': lambda d: d.get('puell_multiple') or d.get('nvt_ratio'),
-        'html': '''<div class="inline-chart" aria-label="链上指标图表">
-  <div class="chart-label">链上估值指标</div>
-  <div id="chart-onchain" class="chart-dual-gauge"></div>
+    'hashrate': {
+        'keywords': ['矿工', '算力', 'hashrate', 'mining', '挖矿', '难度', '矿场'],
+        'data_check': lambda d: len(d.get('hashrate_daily', [])) > 5,
+        'html': '''<div class="inline-chart" aria-label="算力与收益走势">
+  <div class="chart-label">40天全网算力 (EH/s) 与每TH/s日收益 (¥)</div>
+  <div id="chart-hashrate" style="width:100%;height:300px;"></div>
 </div>''',
     },
 }
@@ -1419,61 +1415,45 @@ assetChart.setOption({{
   grid: {{ left: 50, right: 20, top: 20, bottom: 60 }}
 }});''')
 
-    # 3. 费率热力图
-    rates = data.get('funding_rates', {})
-    if rates:
-        exchanges = list(rates.keys())
-        all_coins = set()
-        for exch_rates in rates.values():
-            all_coins.update(exch_rates.keys())
-        coins = sorted(list(all_coins))[:8]
-        heatmap_data = []
-        for ei, exch in enumerate(exchanges):
-            for ci, coin in enumerate(coins):
-                val = rates.get(exch, {}).get(coin, 0)
-                heatmap_data.append([ci, ei, round(float(val) * 100, 4)])
+    # 3. 40天算力 + 每TH/s日收益双轴折线图
+    hr_daily = data.get('hashrate_daily', [])
+    btc_usd = data.get('btc_price_usd', 0)
+    if hr_daily and len(hr_daily) > 5 and btc_usd:
+        dates = [p['date'] for p in hr_daily]
+        hashrates = [p['hashrate_eh'] for p in hr_daily]
+        # 每TH/s日收益(¥) = (3.125 BTC × 144 blocks / 网络总TH) × BTC价格CNY
+        # 网络总TH = EH/s × 1e6, CNY ≈ USD × 7.2
+        btc_cny = btc_usd * 7.2
+        revenues = []
+        for p in hr_daily:
+            hr_th = p['hashrate_eh'] * 1e6  # EH→TH
+            if hr_th > 0:
+                daily_btc_per_th = (3.125 * 144) / hr_th
+                rev_cny = round(daily_btc_per_th * btc_cny, 2)
+            else:
+                rev_cny = 0
+            revenues.append(rev_cny)
         js.append(f'''
-var rateChart = echarts.init(document.getElementById('chart-funding-rates'));
-rateChart.setOption({{
-  tooltip: {{ formatter: function(p) {{ return p.data[2] ? p.data[2].toFixed(4) + '%' : 'N/A'; }} }},
-  xAxis: {{ type: 'category', data: {json.dumps(coins)}, axisLabel: {{ fontSize: 11, color: '#8b949e' }} }},
-  yAxis: {{ type: 'category', data: {json.dumps(exchanges)}, axisLabel: {{ fontSize: 12, color: '#8b949e' }} }},
-  visualMap: {{ min: -0.05, max: 0.1, calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
-    inRange: {{ color: ['#c62828', '#ffeb3b', '#2e7d32'] }}, textStyle: {{ color: '#8b949e', fontSize: 11 }}
-  }},
-  series: [{{
-    type: 'heatmap', data: {json.dumps(heatmap_data)},
-    label: {{ show: true, fontSize: 10, formatter: function(p) {{ return p.data[2] ? p.data[2].toFixed(3) : ''; }}, color: '#e6edf3' }}
-  }}],
-  grid: {{ left: 70, right: 20, top: 10, bottom: 60 }}
-}});''')
-
-    # 4. 链上指标仪表盘
-    puell = data.get('puell_multiple', 0)
-    nvt = data.get('nvt_ratio', 0)
-    if puell or nvt:
-        js.append(f'''
-var onchainChart = echarts.init(document.getElementById('chart-onchain'));
-onchainChart.setOption({{
-  tooltip: {{}},
+var hrChart = echarts.init(document.getElementById('chart-hashrate'));
+hrChart.setOption({{
+  tooltip: {{ trigger: 'axis', axisPointer: {{ type: 'cross' }} }},
+  legend: {{ data: ['算力 (EH/s)', '每TH/s日收益 (¥)'], textStyle: {{ color: '#8b949e', fontSize: 11 }}, top: 5 }},
+  xAxis: {{ type: 'category', data: {json.dumps(dates)}, axisLabel: {{ fontSize: 10, color: '#8b949e', rotate: 30 }} }},
+  yAxis: [
+    {{ type: 'value', name: 'EH/s', nameTextStyle: {{ color: '#58a6ff', fontSize: 11 }},
+      axisLabel: {{ color: '#8b949e' }}, splitLine: {{ lineStyle: {{ color: '#21262d' }} }} }},
+    {{ type: 'value', name: '¥/TH/s/天', nameTextStyle: {{ color: '#f7931a', fontSize: 11 }},
+      axisLabel: {{ color: '#8b949e', formatter: '¥{{value}}' }}, splitLine: {{ show: false }} }}
+  ],
   series: [
-    {{ type: 'gauge', center: ['30%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
-      min: 0, max: 4, splitNumber: 4, pointer: {{ length: '55%', width: 5 }},
-      axisLine: {{ lineStyle: {{ width: 15, color: [[0.3, '#2e7d32'], [0.7, '#fdd835'], [1, '#c62828']] }} }},
-      axisTick: {{ show: false }}, splitLine: {{ show: false }}, axisLabel: {{ show: false }},
-      title: {{ text: 'Puell\\nMultiple', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' }},
-      detail: {{ fontSize: 20, offsetCenter: [0, '45%'], formatter: '{{value}}', color: '#e6edf3' }},
-      data: [{{ value: {round(float(puell), 2) if puell else 0} }}]
-    }},
-    {{ type: 'gauge', center: ['70%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
-      min: 0, max: 200, splitNumber: 4, pointer: {{ length: '55%', width: 5 }},
-      axisLine: {{ lineStyle: {{ width: 15, color: [[0.3, '#c62828'], [0.5, '#fdd835'], [1, '#2e7d32']] }} }},
-      axisTick: {{ show: false }}, splitLine: {{ show: false }}, axisLabel: {{ show: false }},
-      title: {{ text: 'NVT\\nRatio', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' }},
-      detail: {{ fontSize: 20, offsetCenter: [0, '45%'], formatter: '{{value}}', color: '#e6edf3' }},
-      data: [{{ value: {round(float(nvt), 1) if nvt else 0} }}]
-    }}
-  ]
+    {{ name: '算力 (EH/s)', type: 'line', data: {json.dumps(hashrates)},
+      lineStyle: {{ color: '#58a6ff', width: 2 }}, itemStyle: {{ color: '#58a6ff' }},
+      smooth: true, symbol: 'none', areaStyle: {{ color: 'rgba(88,166,255,0.1)' }} }},
+    {{ name: '每TH/s日收益 (¥)', type: 'line', yAxisIndex: 1, data: {json.dumps(revenues)},
+      lineStyle: {{ color: '#f7931a', width: 2 }}, itemStyle: {{ color: '#f7931a' }},
+      smooth: true, symbol: 'none' }}
+  ],
+  grid: {{ left: 60, right: 70, top: 40, bottom: 50 }}
 }});''')
 
     return '\n'.join(js)
@@ -1597,7 +1577,7 @@ def main():
 
         # 生成预览HTML（含ECharts交互图表）
         try:
-            generate_preview_html(analysis, market, onchain, funding, options, defi, macro, sentiment)
+            generate_preview_html(analysis, market, onchain, mining, funding, options, defi, macro, sentiment)
         except Exception as e:
             print(f'  ⚠️ 预览HTML生成失败（不影响推送）: {e}')
 
