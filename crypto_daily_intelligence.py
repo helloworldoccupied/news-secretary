@@ -1127,6 +1127,323 @@ def format_data_context(market, onchain, mining, funding, oi_ls, options, defi, 
 
 
 # ============================================================
+# 预览HTML生成（含ECharts交互图表）
+# ============================================================
+PREVIEW_URL = 'https://helloworldoccupied.github.io/news-secretary/'
+
+
+def generate_preview_html(report_text, market, onchain, funding, options, defi, macro, sentiment):
+    """生成含ECharts交互图表的HTML预览页面，保存为preview.html"""
+
+    # ===== 提取图表数据 =====
+    chart_data = {}
+
+    # BTC/ETH价格
+    btc = market.get('prices', {}).get('bitcoin', {})
+    if btc:
+        chart_data['btc_price'] = btc.get('usd', 0)
+        chart_data['btc_change_24h'] = btc.get('usd_24h_change', 0)
+    eth = market.get('prices', {}).get('ethereum', {})
+    if eth:
+        chart_data['eth_price'] = eth.get('usd', 0)
+        chart_data['eth_change_24h'] = eth.get('usd_24h_change', 0)
+
+    # Top coins涨跌幅
+    top_coins = market.get('prices', {})
+    coin_changes = {}
+    for coin_id, info in top_coins.items():
+        if isinstance(info, dict) and info.get('usd_24h_change') is not None:
+            name = coin_id.upper()[:5]
+            coin_changes[name] = round(float(info.get('usd_24h_change', 0)), 2)
+    chart_data['coin_changes'] = dict(sorted(coin_changes.items(), key=lambda x: abs(x[1]), reverse=True)[:10])
+
+    # 恐贪指数
+    fg = sentiment.get('fear_greed', {})
+    if fg:
+        chart_data['fear_greed_value'] = int(fg.get('value', 50))
+        chart_data['fear_greed_label'] = fg.get('classification', 'Neutral')
+
+    # 费率
+    chart_data['funding_rates'] = {}
+    for exch in ['binance', 'okx', 'bybit']:
+        rates = funding.get(exch, {})
+        if rates and isinstance(rates, dict):
+            cleaned = {}
+            for k, v in list(rates.items())[:8]:
+                try:
+                    if isinstance(v, (int, float)):
+                        cleaned[k] = float(v)
+                    elif isinstance(v, str):
+                        cleaned[k] = float(v)
+                    else:
+                        cleaned[k] = 0
+                except:
+                    cleaned[k] = 0
+            chart_data['funding_rates'][exch] = cleaned
+
+    # 宏观
+    for k in ['DXY', 'Gold', 'US10Y', 'SPX', 'Nasdaq']:
+        macro_item = macro.get(k, {})
+        if macro_item:
+            chart_data[f'macro_{k.lower()}'] = macro_item.get('price', 0)
+            chart_data[f'macro_{k.lower()}_change'] = macro_item.get('change_pct', macro_item.get('change_1d', 0))
+
+    # 期权
+    if options.get('btc_options'):
+        chart_data['put_call_ratio'] = options['btc_options'].get('put_call_ratio', 0)
+    if options.get('dvol'):
+        chart_data['dvol'] = options['dvol'].get('current', 0)
+
+    # 链上
+    chart_data['puell_multiple'] = onchain.get('puell_multiple', 0)
+    chart_data['nvt_ratio'] = onchain.get('nvt_ratio', 0)
+
+    # DeFi
+    chart_data['defi_tvl'] = defi.get('tvl_current', 0)
+
+    # ===== 生成ECharts JS =====
+    charts_js = _build_charts_js(chart_data)
+
+    # ===== 简易markdown转HTML =====
+    report_html = _md_to_html(report_text)
+
+    # ===== 组装完整HTML =====
+    now_bjt = datetime.now(BJT).strftime('%Y-%m-%d %H:%M BJT')
+    btc_price = chart_data.get('btc_price', 0)
+    fg_val = chart_data.get('fear_greed_value', '?')
+    fg_lbl = chart_data.get('fear_greed_label', '')
+
+    html = f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加密投研日报 {TODAY_BJT}</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* {{ margin: 0; padding: 0; box-sizing: border-box; }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.7; }}
+.header {{ background: linear-gradient(135deg, #1a1f36 0%, #0d1117 100%); border-bottom: 2px solid #f7931a; padding: 20px; text-align: center; }}
+.header h1 {{ font-size: 24px; color: #f7931a; margin-bottom: 8px; }}
+.header .meta {{ font-size: 14px; color: #8b949e; }}
+.header .price-banner {{ margin-top: 12px; font-size: 18px; }}
+.header .price-banner .btc {{ color: #f7931a; font-weight: bold; font-size: 28px; }}
+.charts-section {{ padding: 16px; }}
+.charts-section h2 {{ font-size: 20px; color: #58a6ff; margin-bottom: 16px; border-left: 4px solid #58a6ff; padding-left: 12px; }}
+.chart-row {{ display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }}
+.chart-box {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; flex: 1; min-width: 300px; }}
+.chart-box.wide {{ flex: 100%; }}
+.chart-title {{ font-size: 14px; color: #8b949e; margin-bottom: 8px; text-align: center; }}
+.chart-gauge {{ width: 100%; height: 220px; }}
+.chart-bar {{ width: 100%; height: 280px; }}
+.chart-heatmap {{ width: 100%; height: 250px; }}
+.chart-dual-gauge {{ width: 100%; height: 250px; }}
+.report-section {{ padding: 16px 20px; max-width: 900px; margin: 0 auto; }}
+.report-section h2 {{ font-size: 20px; color: #58a6ff; margin: 24px 0 12px; border-left: 4px solid #58a6ff; padding-left: 12px; }}
+.report-section h3 {{ font-size: 17px; color: #d2a8ff; margin: 18px 0 8px; }}
+.report-section p {{ margin: 8px 0; color: #c9d1d9; }}
+.report-section ul {{ margin: 8px 0 8px 20px; }}
+.report-section li {{ margin: 4px 0; color: #c9d1d9; }}
+.report-section strong {{ color: #f0f6fc; }}
+.report-section hr {{ border: none; border-top: 1px solid #30363d; margin: 20px 0; }}
+.footer {{ text-align: center; padding: 20px; color: #484f58; font-size: 13px; border-top: 1px solid #30363d; margin-top: 40px; }}
+@media (max-width: 768px) {{
+  .chart-box {{ min-width: 100%; }}
+  .chart-row {{ flex-direction: column; }}
+  .header h1 {{ font-size: 20px; }}
+}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🪙 加密货币投研日报</h1>
+  <div class="meta">{now_bjt} | Claude Sonnet 深度分析 | 20+ 数据源</div>
+  <div class="price-banner">
+    BTC <span class="btc">${btc_price:,.0f}</span>
+    &nbsp;&nbsp; Fear &amp; Greed: <span style="color:{'#c62828' if fg_val < 25 else '#ef6c00' if fg_val < 45 else '#fdd835' if fg_val < 55 else '#66bb6a' if fg_val < 75 else '#2e7d32'}">{fg_val} ({fg_lbl})</span>
+  </div>
+</div>
+
+<div class="charts-section">
+  <h2>📊 数据可视化</h2>
+  <div class="chart-row">
+    <div class="chart-box"><div class="chart-title">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
+    <div class="chart-box"><div class="chart-title">24h 主要资产涨跌幅 (%)</div><div id="chart-assets" class="chart-bar"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box wide"><div class="chart-title">三所资金费率热力图 (%, 8h)</div><div id="chart-funding-rates" class="chart-heatmap"></div></div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-box wide"><div class="chart-title">链上估值指标</div><div id="chart-onchain" class="chart-dual-gauge"></div></div>
+  </div>
+</div>
+
+<div class="report-section">
+{report_html}
+</div>
+
+<div class="footer">
+  情报部门 | Claude Sonnet 首席分析师 | {now_bjt}<br>
+  数据源: CoinGecko / Blockchain.info / mempool.space / Binance / OKX / Bybit / Deribit / DefiLlama / Yahoo Finance
+</div>
+
+<script>
+{charts_js}
+window.addEventListener('resize', function() {{
+  document.querySelectorAll('[id^="chart-"]').forEach(function(el) {{
+    var c = echarts.getInstanceByDom(el);
+    if (c) c.resize();
+  }});
+}});
+</script>
+</body>
+</html>'''
+
+    # 保存
+    preview_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'preview.html')
+    with open(preview_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+    print(f'  预览HTML已保存: {preview_path} ({len(html)} 字符)')
+    return preview_path
+
+
+def _build_charts_js(data):
+    """生成ECharts图表JavaScript"""
+    js = []
+
+    # 1. 恐贪指数仪表盘
+    fg_val = data.get('fear_greed_value', 50)
+    fg_label = data.get('fear_greed_label', 'Neutral')
+    js.append(f'''
+var fgChart = echarts.init(document.getElementById('chart-fear-greed'));
+fgChart.setOption({{
+  series: [{{
+    type: 'gauge', startAngle: 180, endAngle: 0, min: 0, max: 100, splitNumber: 4,
+    pointer: {{ show: true, length: '60%', width: 6 }},
+    axisLine: {{ lineStyle: {{ width: 20,
+      color: [[0.25, '#c62828'], [0.45, '#ef6c00'], [0.55, '#fdd835'], [0.75, '#66bb6a'], [1, '#2e7d32']]
+    }} }},
+    axisTick: {{ show: false }}, splitLine: {{ show: false }}, axisLabel: {{ show: false }},
+    detail: {{ fontSize: 28, fontWeight: 'bold', offsetCenter: [0, '30%'],
+      formatter: function(v) {{ return v + '\\n{fg_label}'; }}, color: '#e6edf3'
+    }},
+    data: [{{ value: {fg_val} }}]
+  }}]
+}});''')
+
+    # 2. 资产涨跌幅柱状图
+    coin_changes = data.get('coin_changes', {})
+    assets = list(coin_changes.keys())
+    changes = list(coin_changes.values())
+    # 加入宏观资产
+    for key, label in [('dxy', 'DXY'), ('gold', 'Gold'), ('spx', 'S&P500')]:
+        chg = data.get(f'macro_{key}_change', 0)
+        if chg:
+            assets.append(label)
+            changes.append(round(float(chg), 2))
+
+    if assets:
+        colors = ['#2e7d32' if c >= 0 else '#c62828' for c in changes]
+        js.append(f'''
+var assetChart = echarts.init(document.getElementById('chart-assets'));
+assetChart.setOption({{
+  tooltip: {{ trigger: 'axis', formatter: '{{b}}: {{c}}%' }},
+  xAxis: {{ type: 'category', data: {json.dumps(assets)}, axisLabel: {{ fontSize: 11, rotate: 30, color: '#8b949e' }} }},
+  yAxis: {{ type: 'value', axisLabel: {{ formatter: '{{value}}%', color: '#8b949e' }}, splitLine: {{ lineStyle: {{ color: '#21262d' }} }} }},
+  series: [{{
+    type: 'bar', data: {json.dumps(changes)},
+    itemStyle: {{ color: function(p) {{ return {json.dumps(colors)}[p.dataIndex]; }} }},
+    label: {{ show: true, position: 'top', formatter: '{{c}}%', fontSize: 10, color: '#8b949e' }}
+  }}],
+  grid: {{ left: 50, right: 20, top: 20, bottom: 60 }}
+}});''')
+
+    # 3. 费率热力图
+    rates = data.get('funding_rates', {})
+    if rates:
+        exchanges = list(rates.keys())
+        all_coins = set()
+        for exch_rates in rates.values():
+            all_coins.update(exch_rates.keys())
+        coins = sorted(list(all_coins))[:8]
+        heatmap_data = []
+        for ei, exch in enumerate(exchanges):
+            for ci, coin in enumerate(coins):
+                val = rates.get(exch, {}).get(coin, 0)
+                heatmap_data.append([ci, ei, round(float(val) * 100, 4)])
+        js.append(f'''
+var rateChart = echarts.init(document.getElementById('chart-funding-rates'));
+rateChart.setOption({{
+  tooltip: {{ formatter: function(p) {{ return p.data[2] ? p.data[2].toFixed(4) + '%' : 'N/A'; }} }},
+  xAxis: {{ type: 'category', data: {json.dumps(coins)}, axisLabel: {{ fontSize: 11, color: '#8b949e' }} }},
+  yAxis: {{ type: 'category', data: {json.dumps(exchanges)}, axisLabel: {{ fontSize: 12, color: '#8b949e' }} }},
+  visualMap: {{ min: -0.05, max: 0.1, calculable: true, orient: 'horizontal', left: 'center', bottom: 0,
+    inRange: {{ color: ['#c62828', '#ffeb3b', '#2e7d32'] }}, textStyle: {{ color: '#8b949e', fontSize: 11 }}
+  }},
+  series: [{{
+    type: 'heatmap', data: {json.dumps(heatmap_data)},
+    label: {{ show: true, fontSize: 10, formatter: function(p) {{ return p.data[2] ? p.data[2].toFixed(3) : ''; }}, color: '#e6edf3' }}
+  }}],
+  grid: {{ left: 70, right: 20, top: 10, bottom: 60 }}
+}});''')
+
+    # 4. 链上指标仪表盘
+    puell = data.get('puell_multiple', 0)
+    nvt = data.get('nvt_ratio', 0)
+    if puell or nvt:
+        js.append(f'''
+var onchainChart = echarts.init(document.getElementById('chart-onchain'));
+onchainChart.setOption({{
+  tooltip: {{}},
+  series: [
+    {{ type: 'gauge', center: ['30%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
+      min: 0, max: 4, splitNumber: 4, pointer: {{ length: '55%', width: 5 }},
+      axisLine: {{ lineStyle: {{ width: 15, color: [[0.3, '#2e7d32'], [0.7, '#fdd835'], [1, '#c62828']] }} }},
+      axisTick: {{ show: false }}, splitLine: {{ show: false }}, axisLabel: {{ show: false }},
+      title: {{ text: 'Puell\\nMultiple', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' }},
+      detail: {{ fontSize: 20, offsetCenter: [0, '45%'], formatter: '{{value}}', color: '#e6edf3' }},
+      data: [{{ value: {round(float(puell), 2) if puell else 0} }}]
+    }},
+    {{ type: 'gauge', center: ['70%', '55%'], radius: '80%', startAngle: 200, endAngle: -20,
+      min: 0, max: 200, splitNumber: 4, pointer: {{ length: '55%', width: 5 }},
+      axisLine: {{ lineStyle: {{ width: 15, color: [[0.3, '#c62828'], [0.5, '#fdd835'], [1, '#2e7d32']] }} }},
+      axisTick: {{ show: false }}, splitLine: {{ show: false }}, axisLabel: {{ show: false }},
+      title: {{ text: 'NVT\\nRatio', offsetCenter: [0, '75%'], fontSize: 12, color: '#8b949e' }},
+      detail: {{ fontSize: 20, offsetCenter: [0, '45%'], formatter: '{{value}}', color: '#e6edf3' }},
+      data: [{{ value: {round(float(nvt), 1) if nvt else 0} }}]
+    }}
+  ]
+}});''')
+
+    return '\n'.join(js)
+
+
+def _md_to_html(text):
+    """简易markdown→HTML"""
+    text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    text = re.sub(r'^## (.+)$', r'<h2>\1</h2>', text, flags=re.MULTILINE)
+    text = re.sub(r'^### (.+)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
+    text = re.sub(r'^#### (.+)$', r'<h4>\1</h4>', text, flags=re.MULTILINE)
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    text = re.sub(r'^- (.+)$', r'<li>\1</li>', text, flags=re.MULTILINE)
+    text = re.sub(r'^(\d+)\. (.+)$', r'<li>\2</li>', text, flags=re.MULTILINE)
+    text = re.sub(r'^---+$', '<hr>', text, flags=re.MULTILINE)
+    paragraphs = text.split('\n\n')
+    parts = []
+    for p in paragraphs:
+        p = p.strip()
+        if not p:
+            continue
+        if p.startswith('<h') or p.startswith('<hr'):
+            parts.append(p)
+        elif '<li>' in p:
+            parts.append(f'<ul>{p}</ul>')
+        else:
+            parts.append(f'<p>{p.replace(chr(10), "<br>")}</p>')
+    return '\n'.join(parts)
+
+
+# ============================================================
 # 推送
 # ============================================================
 
@@ -1138,11 +1455,14 @@ def split_and_push(analysis_text, date_str):
         push_serverchan_status('加密投研日报', '失败', 'Claude分析未返回结果')
         return
 
-    # Server酱推送完整报告
-    push_serverchan_report(f'【加密情报】{date_str} 投研日报', analysis_text)
+    # Server酱推送 — 在报告顶部插入图表预览链接
+    preview_link = f'\n\n📊 **[点击查看交互图表]({PREVIEW_URL})** ← 恐贪指数/费率热力图/链上指标\n\n---\n\n'
+    enriched_text = preview_link + analysis_text
+
+    push_serverchan_report(f'【加密情报】{date_str} 投研日报', enriched_text)
 
     # 状态通知
-    push_serverchan_status('加密投研日报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字')
+    push_serverchan_status('加密投研日报', '成功', f'{date_str} 报告已推送，{len(analysis_text)}字，含交互图表')
 
 
 def save_to_supabase(date_str, analysis_text, data_summary):
@@ -1209,7 +1529,13 @@ def main():
     if analysis:
         print(f'\n分析报告: {len(analysis)} 字符')
 
-        # 多条Server酱推送
+        # 生成预览HTML（含ECharts交互图表）
+        try:
+            generate_preview_html(analysis, market, onchain, funding, options, defi, macro, sentiment)
+        except Exception as e:
+            print(f'  ⚠️ 预览HTML生成失败（不影响推送）: {e}')
+
+        # 多条Server酱推送（含图表预览链接）
         split_and_push(analysis, TODAY_BJT)
 
         # Supabase存档
