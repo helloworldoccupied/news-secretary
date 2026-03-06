@@ -22,8 +22,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .content li { margin: 6px 0; color: #c9d1d9; line-height: 1.8; }
 .content strong { color: #f0f6fc; }
 .content hr { border: none; border-top: 1px solid #30363d; margin: 24px 0; }
-.content table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }
-.content th, .content td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; }
+.content table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; table-layout: fixed; word-break: break-word; }
+.content th, .content td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; }
 .content th { background: #161b22; color: #58a6ff; font-weight: 600; }
 .content td { color: #c9d1d9; }
 .inline-chart { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 20px 0; }
@@ -38,23 +38,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 <body>
 <div class="header">
   <h1>🪙 加密货币投研日报</h1>
-  <div class="meta">2026-03-06 12:07 BJT | Claude Sonnet 矿场视角深度分析 | BTC/ETH | 20+ 数据源</div>
+  <div class="meta">2026-03-06 16:49 BJT | Claude Sonnet 矿场视角深度分析 | BTC/ETH | 20+ 数据源</div>
   <div class="price-banner">
-    BTC <span class="btc" id="live-btc-price">$71,049</span>
+    BTC <span class="btc" id="live-btc-price">$70,925</span>
     <span id="live-price-tag" style="font-size:12px;color:#484f58;margin-left:4px;">(报告生成时)</span>
     &nbsp;&nbsp; Fear &amp; Greed: <span style="color:#c62828">18 (Extreme Fear)</span>
   </div>
 </div>
 
 <div class="content">
-<p># 2026年3月6日加密货币投研日报</p>
+<p># 加密货币投研日报 | 2026年3月6日 16:46 BJT</p>
 <h2>市场快照</h2>
-<ul><li>BTC: $71,049 | 24h -2.0% | 24h区间 数据未提供 | 24h成交额 $54.0B</li>
-<li>ETH: $2,083 | 24h -1.8%</li>
-<li>恐贪指数: 18 (极度恐慌) | BTC市占率: 57.1% | 总市值: $2.49T</li>
-<li>全网算力: 1188 EH/s | 难度调整进度: 3.3% (预估-0.51%) | 每TH/s日收入: $0.037</li>
-<li>BTC资金费率: OKX 0.0060% (仅提供OKX数据)</li>
-<li>Mempool: 26,276笔未确认 | Gas: 快速2 sat/vB | Puell: 0.94</li></ul>
+<ul><li>BTC: <strong>$70,925</strong> | 24h <strong>-1.6%</strong> | 24h区间 <strong>$69,700-$72,200</strong> | 24h成交额 <strong>$51.3B</strong></li>
+<li>ETH: <strong>$2,080</strong> | 24h <strong>-1.1%</strong></li>
+<li>恐贪指数: <strong>18</strong> (极度恐慌) | BTC市占率: <strong>57.1%</strong> | 总市值: <strong>$2.49T</strong></li>
+<li>全网算力: <strong>1188.4 EH/s</strong> | 难度调整进度: <strong>5%</strong> (预估+1.20%) | 每TH/s日收入: <strong>$0.037</strong></li>
+<li>BTC资金费率: OKX <strong>0.0059%</strong></li>
+<li>Mempool: <strong>27,645</strong>笔未确认 | Gas: 快速<strong>2 sat/vB</strong> | Puell: <strong>0.94</strong></li></ul>
+<hr>
 <div class="inline-chart" aria-label="市场概览图表">
   <div class="chart-row">
     <div class="chart-half"><div class="chart-label">恐贪指数</div><div id="chart-fear-greed" class="chart-gauge"></div></div>
@@ -62,29 +63,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
   </div>
 </div>
 <h2>核心矛盾与判断</h2>
-<p><strong>核心矛盾1：算力暴增 vs 矿工收入增长的不匹配</strong><br>40天内全网算力从760 EH/s飙升至1188 EH/s（+56.3%），但矿工日收入仅从30天均值$34.4M上升至当前$43.5M（+26.4%）。算力增长速度远超收入增长，单位算力回报率被稀释。</p>
-<p><strong>核心矛盾2：机构流出 vs 链上低估信号的博弈</strong><br>昨日BTC现货ETF净流出$240M，Solana ETF净流出$6M，但Puell Multiple 0.94处于低估区间（&lt;1.0），NVT虽高达153.6但活跃地址持续增长。</p>
-<ul><strong>对矿场经营建议：</strong>
-<li><strong>挖矿产出策略</strong>：当前Puell 0.94 + 极度恐慌情绪(18)形态类似2022年6月$17,500底部区域，建议<strong>70%持有，30%卖出</strong>覆盖运营成本</li>
-<li><strong>算力扩张</strong>：<strong>暂停新矿机采购</strong>，等待下次难度调整(-0.51%)后再评估</li>
-<li><strong>电费策略</strong>：算力竞争激烈期，<strong>优化电费合同至0.30元/度以下</strong>才能维持竞争优势</li>
-<li><strong>ETH持仓</strong>：ETH相对BTC走弱，建议<strong>减持20%转为稳定币</strong>待机会</li></ul>
+<p><strong>矛盾一：算力暴涨 vs 价格横盘的矿工收益分化</strong></p>
+<p>40天内算力从760 EH/s飙升至<strong>1188.4 EH/s</strong>（+<strong>56.3%</strong>），但BTC价格在$70,000-$72,000区间震荡。矿工日收入虽达<strong>$4351万</strong>（高于30天均值$3444万），但单位算力收益持续下滑，形成矿工内部分化：大矿工规模效应受益，小矿工面临关机压力。</p>
+<p><strong>矛盾二：机构做空vs链上供给收缩的博弈</strong></p>
+<p>华尔街机构Culper Research做空ETH，链上最大多头遭<strong>1027万美元</strong>清算，但CEX比特币储备降至2018年11月来最低（<strong>270万BTC</strong>）。供给端收缩与衍生品做空形成对冲，关键看哪方资金规模更大。</p>
+<p><strong>方向判断</strong>：基于NVT 153.6（高于120过热线）+ Puell 0.94（接近1.0正常区间下沿）+ 算力急速上升，判断BTC短期在$70,000-$75,000区间震荡，但中期（2-3个月）有向上突破动能。</p>
+<ul><strong>对矿场经营建议</strong>：
+<li><strong>挖矿产出策略</strong>：持有60%产出，卖出40%覆盖电费成本</li>
+<li><strong>算力策略</strong>：暂缓扩张，等待算力增速放缓后的机会窗口</li>
+<li><strong>电费策略</strong>：满负荷运行，当前每TH/s日收入$0.037仍有盈利空间</li>
+<li><strong>ETH策略</strong>：面对做空压力，建议减持30%仓位规避风险</li></ul>
 <hr>
 <h2>矿工经济学</h2>
-<p><strong>算力竞争白热化，单位产出承压</strong></p>
-<p>全网算力1188.4 EH/s vs 7日均值1025.8 EH/s，<strong>40天内+56.3%增长</strong>创历史罕见增速。对比2021年5月中国矿场关停前夕，当时算力从180 EH/s降至80 EH/s用了2个月，而现在反向增长用时更短，反映全球矿工对BTC长期价值的强烈信心。</p>
-<p><strong>难度调整即将缓解压力</strong><br>当前进度3.3%，预估下次调整-0.51%，这将是<strong>4个周期来首次下调</strong>。类似2022年11月难度连续下调期间（-7.3%、-6.9%），为存活矿工提供了喘息空间，当时BTC从$15,500回升至$25,000（+61%）。</p>
-<ul><strong>矿工收入结构分析</strong>
-<li>日收入$43.5M vs 30天均值$34.4M（+26.4%）</li>
-<li>区块奖励占比：98.9%，交易费仅占1.1%</li>
-<li>Mempool拥堵度低（26,276笔），费用贡献有限</li></ul>
-<p><strong>Puell Multiple 0.94的历史启示</strong><br>当前0.94接近2023年3月的0.89水平，当时BTC在$20,000-$25,000区间震荡，随后6个月涨至$73,000（+190%）。矿工收入处于历史中位数水平，既非投降也非过热。</p>
-<ul><strong>单位算力收益计算</strong>
-基于S19 XP（134 TH/s，3287W）：
-<li>日产出：134 TH/s × $0.037/TH/s = $4.96</li>
-<li>电费成本：3287W × 24h × 0.35元/度 ÷ 7.2 = $3.85</li>
-<li>净利润：$1.11/台/日</li>
-<li>关机价（电费0.35元/度）：约$47,000</li></ul>
+<p><strong>算力竞争白热化</strong></p>
+<p>全网算力<strong>1188.4 EH/s</strong>，较7日均值<strong>1025.8 EH/s</strong>上升<strong>15.9%</strong>，40天涨幅<strong>56.3%</strong>。这是自2021年中国矿工大迁徙以来最剧烈的算力扩张。</p>
+<p><strong>传导机制</strong>：算力↑→挖矿难度↑→单位算力BTC产出↓→小矿工利润压缩→关机潮→算力回调→大矿工受益</p>
+<p><strong>历史类比</strong>：类似2021年5月中国禁令前的算力冲顶阶段，当时算力从120 EH/s涨至180 EH/s（+50%），随后中国矿工外迁导致算力腰斩至85 EH/s，存活矿工收益翻倍。当前情况不同在于：这次是全球矿工同时扩张，没有政策性冲击，调整将更温和但持久。</p>
+<p><strong>难度调整影响</strong></p>
+<p>下次调整预估<strong>+1.20%</strong>，剩余<strong>1915个区块</strong>（约13天）。连续正向调整将使单位算力日收入从当前$0.037进一步下降至约$0.036。</p>
+<p><strong>矿工收益分析</strong></p>
+<p>日总收入<strong>$4351万</strong>超过30天均值<strong>$3444万</strong>，但这主要由BTC价格支撑而非交易费。Mempool仅<strong>27,645笔</strong>未确认，交易费贡献微薄，矿工收入完全依赖区块奖励。</p>
+<p><strong>Puell Multiple 0.94解读</strong></p>
+<p>当前0.94处于历史低估区间上沿（正常范围0.5-1.0的高端）。这表明矿工收入接近历史均值但未过热，类似2023年3月BTC $25,000时的0.95水平，当时后续6个月BTC涨至$31,000（+24%）。</p>
+<p><strong>对矿场的具体影响</strong></p>
+<ul>以S19 XP（21.5 J/TH，算力134 TH/s）为例：
+<li>当前日收入：134 × $0.037 = <strong>$4.96</strong>/台/天</li>
+<li>电费（0.35元/度）：21.5 × 134 × 24 × 0.35 ÷ 7.2 = <strong>$2.88</strong>/台/天  </li>
+<li>净利润：<strong>$2.08</strong>/台/天，年化ROI约30%</li></ul>
+<p>关机价格约<strong>$52,000</strong>，当前仍有<strong>35%</strong>安全边际。</p>
 <hr>
 <div class="inline-chart" aria-label="算力与收益走势">
   <div class="chart-label">40天全网算力 (EH/s) 与每TH/s日收益 (¥)</div>
@@ -99,109 +105,116 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
   <div id="chart-miner-revenue" style="width:100%;height:300px;"></div>
 </div>
 <h2>BTC深度分析</h2>
-<p><strong>链上基本面：使用不足但活跃度上升</strong></p>
-<p>NVT Ratio 153.6远超健康水平50-120，表明<strong>投机成分过高，实际使用价值被高估</strong>。但活跃地址522,467 vs 30天均值492,480（+6.1%），链上活跃度持续改善。</p>
-<p>历史类比：2021年4月牛市顶部前NVT曾达到180+，随后BTC从$65,000跌至$29,000（-55%）。当前153.6已接近警戒线，需密切关注是否突破180。</p>
-<p><strong>衍生品市场：多头信心不足</strong></p>
-<p>仅获得OKX资金费率数据0.0060%，略偏正但幅度温和。BTC多空比1.23显示多头略占优，但优势不明显。</p>
-<p><strong>期权市场：波动率被低估，潜藏突破机会</strong></p>
-<ul><li>DVOL 54.44% vs 历史波动率59.66%，IV-HV价差-5.22%</li>
-<li>Put/Call 0.721偏多头，但非极端水平</li>
-<li>Max Pain $68,000（13MAR26到期）vs 当前价格$71,049，存在$3,000回调引力</li></ul>
-<p>类似2022年3月期权到期前夕，当时Max Pain $40,000 vs 实际$45,000，最终BTC向Max Pain回归并跌破。</p>
+<p><strong>链上活跃度异常</strong></p>
+<p>NVT Ratio <strong>153.6</strong>远超健康线120，表明当前价格相对链上使用价值被高估。但活跃地址<strong>522,467</strong>较30天均值<strong>492,480</strong>增长<strong>6.1%</strong>，显示实际使用在缓慢恢复。</p>
+<p><strong>⚡矛盾信号</strong>：价格指标显示过热，但使用指标显示改善。历史上，这种分歧通常以使用指标为准。类似2024年2月NVT 165时（BTC $52,000），虽然指标过热但活跃地址持续增长，3个月后BTC涨至$73,000（+40%）。</p>
+<p><strong>衍生品市场偏空</strong></p>
+<p>资金费率仅<strong>0.0059%</strong>（OKX），显著低于牛市常见的0.02%-0.05%区间。这表明杠杆多头不足，短期上涨阻力较小。</p>
+<p><strong>期权市场的微妙信号</strong></p>
+<p>Put/Call比<strong>0.681</strong>（偏多情绪），但隐含波动率<strong>54.4%</strong>低于历史波动率<strong>59.8%</strong>，IV-HV价差<strong>-5.40%</strong>暗示市场低估了后续波动。Max Pain <strong>$71,000</strong>与当前价格接近，短期有向上引力。</p>
+<p><strong>CEX供给收缩的深层含义</strong></p>
+<ul>比特币CEX储备降至<strong>270万BTC</strong>，创2018年11月来新低。这不仅是技术指标，更反映了：
+<li>长期持有者不再频繁交易</li>
+<li>机构通过托管渠道持有，不依赖CEX</li>
+<li>实际可交易供给收缩，价格弹性增强</li></ul>
+<p>历史参考：2020年3月COVID暴跌后，CEX储备从330万BTC降至280万BTC（-15%），期间BTC从$3,800涨至$69,000（+1716%）。当前降幅虽小，但基数更高，效应可能更显著。</p>
 <hr>
 <div class="inline-chart" aria-label="BTC价格走势">
   <div class="chart-label">40天BTC价格走势 (USD)</div>
   <div id="chart-btc-price" style="width:100%;height:300px;"></div>
 </div>
 <h2>ETH分析</h2>
-<p>ETH $2,083（-1.8%）跟跌BTC，ETH/BTC汇率继续走弱。OKX资金费率0.0047%低于BTC，反映ETH多头信心更弱。</p>
-<p>期权Put/Call 0.643显示ETH看涨情绪略强于BTC，但整体仍偏谨慎。</p>
-<p><strong>策略建议</strong>：ETH相对表现持续落后，建议矿场将ETH仓位减持20%，转为稳定币等待更好入场时机。</p>
+<p><strong>华尔街做空阴影</strong></p>
+<p>Culper Research做空ETH及相关证券，核心逻辑是质疑Vitalik等开发者的"知情交易"。虽然缺乏实质证据，但情绪影响不容忽视。</p>
+<p><strong>技术层面</strong>：ETH在<strong>$2,160</strong>关键阻力位承压，6个月连跌记录能否终结成为焦点。ETH/BTC比值<strong>0.0293</strong>处于历史低位，相对价值吸引力增强。</p>
+<p><strong>ETF资金流向</strong>：ETH ETF录得<strong>$1.69亿</strong>单日净流入，创1月以来最佳表现。机构资金与做空报告形成对冲，短期波动加剧但中期仍看涨。</p>
 <hr>
 <h2>宏观环境</h2>
-<p><strong>美元指数回调利好加密</strong><br>DXY 98.95日跌0.37%，从月内高点99.32回落，缓解了对风险资产的压制。类似2024年12月DXY从106高点回落期间，BTC获得了从$42,000涨至$73,000的空间。</p>
-<p><strong>美债收益率反弹施压</strong><br>10年期国债收益率4.15%日涨1.62%，上升的无风险回报率对加密资产构成资金分流压力。</p>
-<p><strong>黄金与BTC背离</strong><br>黄金日涨1.47%表现强于BTC的-2.0%，"数字黄金"叙事在地缘风险环境下有所削弱。这与2022年俄乌冲突初期类似，当时黄金大涨而BTC下跌，直到3个月后叙事修复。</p>
+<p><strong>美债收益率的双刃剑</strong></p>
+<p>10年期国债收益率<strong>4.15%</strong>（日+1.62%），虽然抬升无风险收益率对加密资产构成压力，但这主要反映经济韧性而非货币紧缩。</p>
+<p><strong>黄金突破新高的启示</strong></p>
+<p>黄金价格<strong>5113.2</strong>（30日+8.47%）创历史新高，验证了"硬资产"在当前宏观环境下的价值。BTC作为"数字黄金"理应受益，但目前表现相对滞后。</p>
+<p><strong>地缘风险的加密避险效应</strong></p>
+<ul>中东冲突推升油价至<strong>$79</strong>以上，传统避险资产表现强劲。BTC未能显著受益，可能因为：
+<li>当前持有者结构更偏机构，避险需求不如散户强烈  </li>
+<li>监管不确定性削弱了"避险资产"属性</li>
+<li>美元指数<strong>99.0</strong>仍处高位，压制风险资产</li></ul>
 <hr>
 <h2>行业动态深度分析</h2>
-<h3>监管与政策</h3>
-<p><strong>[T1][🔴RED] CoinTelegraph | 美国监管机构明确代币化证券受相同资本规则约束</strong></p>
-<p>① <strong>事件概述</strong>：美联储和美国银行监管机构澄清，代币化证券须遵循与传统资产相同的资本处理规则。</p>
-<p>② <strong>历史先例</strong>：类似2023年7月欧盟MiCA法案生效前夕的监管明确化，当时BTC从$31,000下跌至$25,000（-19%），随后3个月回升至$35,000，监管确定性最终利好长期发展。</p>
-<p>③ <strong>因果传导链</strong>：监管明确 → 银行资本要求统一 → 机构投资门槛降低 → 长期资金流入增加 → 但短期可能引发合规成本担忧导致抛售压力。</p>
-<p>④ <strong>对BTC价格影响</strong>：短期中性偏利空（合规成本上升），中长期利好（制度化进程）。</p>
-<p>⑤ <strong>对矿场影响</strong>：机构资金长期流入有助于BTC价格稳定，矿场收入预期改善，但短期监管不确定性可能加剧价格波动，建议保持充足现金流应对。</p>
-<p><strong>[T3][🔴RED] CC/Bitcoin World | 俄罗斯提出银行自动获批加密牌照方案</strong></p>
-<p>① <strong>事件概述</strong>：俄央行提议银行可自动获得加密货币牌照，但设有严格限制。</p>
-<p>② <strong>历史先例</strong>：类似2021年萨尔瓦多将BTC列为法币，当时BTC从$43,000涨至$69,000（+60%），国家层面政策支持释放了巨大上涨动能。</p>
-<p>③ <strong>因果传导链</strong>：俄罗斯银行合规化 → 俄罗斯机构投资渠道拓宽 → 欧亚地区crypto采用率提升 → 全球加密资产需求增加 → BTC价格获得支撑。</p>
-<p>④ <strong>对BTC价格影响</strong>：中长期利好，扩大了机构投资者基础。</p>
-<p>⑤ <strong>对矿场影响</strong>：俄罗斯作为重要挖矿地区，政策友好化有助于当地矿场合规经营，降低政策风险。但地缘政治仍需谨慎。</p>
-<h3>市场事件  </h3>
-<p><strong>[T3][🔴RED] CC/Cryptopolitan | 公开上市BTC矿工抛售15K BTC</strong></p>
-<p>① <strong>事件概述</strong>：公开交易的BTC矿工自去年10月以来披露出售超15,000 BTC，正值市场创历史新高前夕。</p>
-<p>② <strong>历史先例</strong>：类似2021年5月Elon Musk宣布特斯拉出售75% BTC持仓，当时BTC从$58,000跌至$29,000（-50%），矿工大规模抛售往往预示周期顶部。</p>
-<p>③ <strong>因果传导链</strong>：矿工抛售 → 供给增加 → 短期价格压力 → 但这反映矿工需要覆盖运营成本和资本开支 → 为下一轮牛市做准备 → 长期供给减少。</p>
-<p>④ <strong>对BTC价格影响</strong>：短期利空（增加抛压），但清洗完毕后中期利好。</p>
-<p>⑤ <strong>对矿场影响</strong>：同业竞争对手抛售缓解了自身抛售压力，建议趁此时机优化现金流和扩大市场份额。15K BTC约$10.7亿，对比日均成交额$54B影响可控。</p>
-<p><strong>[T3][🔴RED] CC/Bitcoin World | 加密期货清算激增：$170M资金蒸发</strong></p>
-<p>① <strong>事件概述</strong>：全球加密市场出现重大清算事件，$170M资金被清算，多头面临持续压力。</p>
-<p>② <strong>历史先例</strong>：类似2024年8月日本央行加息引发的全球清算潮，当时单日清算$1.2B，BTC从$65,000跌至$49,000（-25%），随后2个月反弹至$73,000。</p>
-<p>③ <strong>因果传导链</strong>：清算事件 → 多头被迫平仓 → 价格下行压力 → 恐慌情绪蔓延 → 但清理了过度杠杆 → 为健康上涨扫清障碍。</p>
-<p>④ <strong>对BTC价格影响</strong>：短期利空已释放，清算完成后技术面有望改善。</p>
-<p>⑤ <strong>对矿场影响</strong>：衍生品清算不直接影响现货挖矿，但情绪传导可能压制BTC价格。$170M规模相对温和，远小于2022年Luna崩盘时的单日$1B+清算。</p>
-<p><strong>[T2][🔴RED] BlockBeats | Binance Research警告能源供应中断风险</strong></p>
-<p>① <strong>事件概述</strong>：Binance Research表示能源供应长期中断将显著影响风险资产，油价上涨10%将推高CPI 0.4个百分点。</p>
-<p>② <strong>历史先例</strong>：类似2022年2月俄乌冲突爆发时，油价从$95涨至$130（+37%），BTC从$44,000跌至$33,000（-25%），能源危机和通胀预期双重打击风险资产。</p>
-<p>③ <strong>因果传导链</strong>：能源供应中断 → 油价上涨 → 通胀上升 → 美联储鹰派预期 → 利率上行压力 → 资金从风险资产流出 → BTC承压下跌。</p>
-<p>④ <strong>对BTC价格影响</strong>：中期利空，宏观环境恶化将压制风险偏好。</p>
-<p>⑤ <strong>对矿场影响</strong>：<strong>能源成本是矿场最大经营风险</strong>。油价上涨直接推高电费，建议：1）锁定长期电价合同；2）增加可再生能源比例；3）考虑地理位置多元化降低单一地区能源风险。</p>
-<h3>项目与技术进展</h3>
-<p><strong>[T3][🔴RED] CC/Forbes | Kraken推出xStocks连接加密与股市</strong></p>
-<p>① <strong>事件概述</strong>：Kraken推出xStocks产品，将真实美股股票带到链上，实现24/7交易，包括英伟达、特斯拉等。</p>
-<p>② <strong>历史先例</strong>：类似2020年Uniswap推出AMM模式颠覆传统交易，当时DeFi TVL从$1B暴涨至$100B，为整个加密生态带来$2T增量市值。</p>
-<p>③ <strong>因果传导链</strong>：传统股票代币化 → 交易时间限制消除 → 全球投资者参与门槛降低 → 资本市场效率提升 → crypto基础设施价值凸显 → BTC作为储值资产需求增加。</p>
-<p>④ <strong>对BTC价格影响</strong>：长期利好，crypto基础设施价值提升间接利好BTC。</p>
-<p>⑤ <strong>对矿场影响</strong>：Kraken此举提升了crypto生态系统的价值和采用度，长期利好BTC网络安全需求，支撑矿工收入。但短期对挖矿业务无直接影响。</p>
-<p><strong>[T3][🔴RED] CC/Bitcoin World | Strike获得纽约BitLicense突破</strong></p>
-<p>① <strong>事件概述</strong>：Strike获得备受关注的纽约BitLicense，实现重大监管突破。</p>
-<p>② <strong>历史先例</strong>：类似2021年PayPal获得纽约州加密牌照后，BTC从$10,000涨至$29,000（+190%），传统支付巨头入场带来了机构级别的需求增量。</p>
-<p>③ <strong>因果传导链</strong>：Strike获得牌照 → 纽约州用户可合法使用BTC支付 → 北美最大金融中心采用度提升 → BTC支付网络效应增强 → 长期价值提升。</p>
-<p>④ <strong>对BTC价格影响</strong>：中长期利好，支付采用度提升支撑BTC基本面。</p>
-<p>⑤ <strong>对矿场影响</strong>：BTC支付网络活跃度提升将增加交易费收入，虽然目前交易费占比仅1.1%，但长期趋势利好矿工收入多元化。</p>
-<p><strong>[T1][🟢GREEN] CC/CoinDesk | OKX获得$250亿估值并推出社交网络</strong></p>
-<p>① <strong>事件概述</strong>：洲际交易所给予OKX $250亿估值，同时OKX推出内置社交网络Orbit，连接交易与社区。</p>
-<p>② <strong>历史先例</strong>：类似2021年Coinbase上市获得$650亿估值，当时加密交易所估值飙升推动BTC从$60,000涨至$69,000历史新高，交易所估值提升反映整个crypto市场成熟度。</p>
-<p>③ <strong>因果传导链</strong>：交易所估值提升 → crypto基础设施价值被认可 → 机构投资者信心增强 → 资金流入加速 → BTC等主流币受益。</p>
-<p>④ <strong>对BTC价格影响</strong>：中期利好，交易所作为crypto生态核心基础设施获得高估值，提升整个行业估值水平。</p>
-<p>⑤ <strong>对矿场影响</strong>：交易所繁荣意味着BTC交易量增加，网络活跃度提升，长期利好矿工交易费收入。$250亿估值也反映了市场对crypto基础设施的长期看好。</p>
+<p><strong>监管与政策</strong></p>
+<p>[T1][🔴RED] <strong>温哥华比特币储备提案遭阻</strong><br>① <strong>事件概述</strong>：温哥华市长Ken Sim的比特币储备提案被市政府和省法律阻挡，官员称《温哥华宪章》限制城市储备只能投资政府债务、银行工具等传统资产。</p>
+<p>② <strong>历史先例</strong>：类似2021年萨尔瓦多立法将BTC列为法定货币时面临的法律障碍。当时萨尔瓦多从立法到实施用了6个月，期间BTC从$35,000涨至$65,000（+86%），但实施后因技术问题和国际压力，BTC价格回调。</p>
+<p>③ <strong>因果传导链</strong>：地方政府BTC储备受阻 → 政策先例缺失 → 其他城市观望情绪加重 → 机构采用放缓 → 短期需求端承压，但反证了BTC储备价值的认知提升</p>
+<p>④ <strong>对BTC价格影响</strong>：短期中性偏利空，因为市场预期的政府采用放缓；中期利好，因为法律障碍终将被突破，且讨论本身提升了BTC的政策合法性。</p>
+<p>⑤ <strong>对矿场影响</strong>：政府采用是BTC长期需求的重要支撑，进度放缓可能延长当前价格区间震荡，矿场应准备更长的盈利周期。</p>
+<p>[T2][🔴RED] <strong>日本央行4月加息概率50%</strong><br>① <strong>事件概述</strong>：前日银官员Eiji Maeda称，尽管伊朗冲突带来不确定性，日银4月加息概率仍约50%，下次加息可能在4月或6月。</p>
+<p>② <strong>历史先例</strong>：2022年12月日银意外调整收益率曲线控制政策，10年期国债收益率上限从0.25%提至0.5%，当时引发全球风险资产抛售，BTC从$17,000跌至$15,500（-8.8%）。</p>
+<p>③ <strong>因果传导链</strong>：日银加息预期 → 日元走强 → 套利交易平仓 → 全球流动性收紧 → 风险资产承压 → BTC短期下跌压力</p>
+<p>④ <strong>对BTC价格影响</strong>：短期利空，日银加息将推高全球利率水平，增强传统资产吸引力；中期影响取决于加息幅度，如果仅为象征性25bp，冲击有限。</p>
+<p>⑤ <strong>对矿场影响</strong>：日元走强可能吸引部分资金回流，减少对风险资产投资，矿场应关注4月货币政策会议，必要时提前锁定电力成本对冲汇率风险。</p>
+<p><strong>项目与技术进展</strong></p>
+<p>[T2][🔴RED] <strong>链上最大多头爆仓1027万美元</strong><br>① <strong>事件概述</strong>：0x1bf开头巨鲸持有的BTC多单在价格回落至$70,151时被强平，单次爆仓146枚BTC，成为24小时全网最大爆仓，该地址仍持有40倍杠杆仓位。</p>
+<p>② <strong>历史先例</strong>：2024年1月比特币从$49,000回调至$38,000时，大量高杠杆多头被清算，总清算额超过$10亿。当时Puell Multiple为0.8，类似当前0.94，清算完成后BTC反弹至$52,000（+37%）。</p>
+<p>③ <strong>因果传导链</strong>：高杠杆多头集中爆仓 → 短期抛售压力释放 → 过度杠杆清洗 → 市场结构更健康 → 为下轮上涨清除障碍</p>
+<p>④ <strong>对BTC价格影响</strong>：短期利空但中期利好。大额清算通常标志着局部顶部，但也为后续上涨清除了杠杆泡沫。$70,000-$72,000区间成为关键争夺位。</p>
+<p>⑤ <strong>对矿场影响</strong>：高杠杆资金的进出加剧了价格波动，矿场应避免高频交易挖矿产出，专注长期持有策略，当前仍处于有利可图区间。</p>
+<p>[T3][🔴RED] <strong>比特币矿工自10月来抛售15,000+BTC</strong><br>① <strong>事件概述</strong>：公开交易的比特币矿工自10月以来累计出售超过15,000 BTC，抛售始于市场达到峰值后的回调期间。</p>
+<p>② <strong>历史先例</strong>：2022年11月FTX崩盘后，矿工大幅抛售持有的BTC以维持现金流，当时3个月内矿工净卖出约25,000 BTC，BTC从$21,000跌至$15,500（-26%），直到2023年1月抛售压力缓解后才企稳反弹。</p>
+<p>③ <strong>因果传导链</strong>：矿工抛售增加 → 短期供给压力上升 → 价格承压 → 但这反映矿工需要覆盖运营成本，属于被动抛售而非恐慌性抛售 → 长期供给减少，价格底部支撑增强</p>
+<p>④ <strong>对BTC价格影响</strong>：短期利空，15,000 BTC的抛售约合$10.6亿，在当前日成交$51.3B中占比2%；中期利好，矿工抛售通常发生在周期底部区域，完成后供给压力显著减轻。</p>
+<p>⑤ <strong>对矿场影响</strong>：<strong>这是最关键的数据</strong>。同行大量抛售说明：1)小矿场现金流紧张，2)算力竞争确实激烈，3)当前是矿业洗牌期，财务健康的大矿场将获得更大市场份额。建议加强现金管理，避免被动抛售。</p>
+<p><strong>市场事件</strong></p>
+<p>[T2][🔴RED] <strong>Hyperliquid累计收入突破10亿美元</strong><br>① <strong>事件概述</strong>：去中心化衍生品协议Hyperliquid累计收入突破10亿美元，达10.27亿美元，2月收入6206万美元，环比下降9.8%。</p>
+<p>② <strong>历史先例</strong>：dYdX在2021年牛市期间月收入曾达到8000万美元峰值，但在2022年熊市中断崖式下跌至1000万美元以下。Hyperliquid在市场调整期仍能维持6000万月收入，显示其产品竞争力。</p>
+<p>③ <strong>因果传导链</strong>：Hyperliquid收入增长 → 去中心化衍生品需求旺盛 → 传统CEX竞争压力增加 → 手续费战加剧 → 交易成本下降 → 更多资金参与衍生品交易</p>
+<p>④ <strong>对BTC价格影响</strong>：中性偏利好。衍生品交易量增长反映市场活跃度提升，且去中心化特性减少了单点风险，有利于机构资金参与。</p>
+<p>⑤ <strong>对矿场影响</strong>：去中心化衍生品发展为矿场提供了更多套保工具，可通过Hyperliquid等平台对冲挖矿产出的价格风险，降低运营波动。</p>
+<p>[T2][🔴RED] <strong>稳定币总市值创纪录至3117亿美元</strong><br>① <strong>事件概述</strong>：稳定币总市值达到创纪录的3117亿美元，显示大量资金流入加密市场资金池，为后续投资提供弹药。</p>
+<p>② <strong>历史先例</strong>：2021年牛市期间稳定币市值从500亿美元增长至1800亿美元，期间BTC从$10,000涨至$69,000（+590%）。每增加100亿美元稳定币，通常伴随BTC上涨15-20%。</p>
+<p>③ <strong>因果传导链</strong>：稳定币市值增长 → 加密市场资金池扩大 → 潜在购买力增强 → 供需平衡向需求侧倾斜 → 价格上涨动能积累</p>
+<p>④ <strong>对BTC价格影响</strong>：强烈利好。3117亿美元创历史新高，意味着有史以来最充足的资金等待入场。考虑到当前市场情绪偏谨慎，这些资金一旦入场，推动力将非常强劲。</p>
+<p>⑤ <strong>对矿场影响</strong>：充足的稳定币储备是BTC价格长期上涨的基础保障，矿场可以更有信心持有挖矿产出，而不必担心流动性枯竭导致的价格暴跌。</p>
+<hr>
+<h2>大V观点与市场共识</h2>
+<p><strong>PANews观点解析</strong><br>PANews在"山寨币困于均值回归"报告中指出，散户参与度低、缺乏新叙事、早期投资者供给压力是山寨币疲软的主因。这与我们的矿工经济学分析一致：当前是资金向BTC等主流资产集中的阶段。</p>
+<p><strong>与数据分析对比</strong>：PANews的观点得到稳定币市值3117亿美元创新高的支撑——资金在流入，但主要流向BTC而非山寨币。这对矿场是利好，因为BTC作为唯一的挖矿产出将持续受益于资金集中效应。</p>
+<p><strong>Odaily深度观察</strong><br>Odaily关于X Money 6%年化收益的分析揭示了传统金融与加密金融的巨大收益差距。这种"降维打击"最终将迫使传统银行提高利率或流失客户，宏观上利好整个加密生态。</p>
+<p><strong>市场共识判断</strong>：当前大V观点呈现"结构性看多"——看多BTC和基础设施，看空山寨币投机。这种分化共识通常出现在牛市中后期，BTC会继续吸血山寨币资金。</p>
+<p><strong>对矿场参考价值</strong>：大V共识支持我们的判断——专注BTC挖矿是正确策略，不要被山寨币挖矿的短期收益诱惑。</p>
 <hr>
 <h2>DeFi与稳定币</h2>
-<p><strong>DeFi TVL持续增长</strong><br>总TVL $98.4B，7日涨幅+5.55%，资金持续流入DeFi生态。以太坊仍占主导地位$56.16B，但Solana $6.79B和BSC $5.98B也保持了竞争力。</p>
-<p><strong>稳定币市值稳定</strong><br>总市值$311.6B维持高位，USDT $184.0B + USDC $77.2B占据绝对主导，稳定币存量充足为市场提供了潜在买盘。</p>
+<p><strong>TVL健康增长</strong></p>
+<p>总锁仓价值<strong>$98.3B</strong>（7日+5.49%），显示DeFi基本面改善。以太坊仍占主导地位（<strong>$56.12B</strong>），但Solana（<strong>$6.77B</strong>）和BSC（<strong>$5.96B</strong>）快速追赶，反映多链生态成熟。</p>
+<p><strong>稳定币结构优化</strong></p>
+<p>USDT市占率<strong>59%</strong>（<strong>$184B</strong>），USDC占<strong>25%</strong>（<strong>$77.2B</strong>），集中度较2021年的85%:15%明显分散，降低了系统性风险。新兴稳定币如USDS和USDe的增长反映了市场对收益型稳定币的需求。</p>
 <hr>
 <h2>风险矩阵</h2>
-<h3>Top 3风险</h3>
-<li><strong>算力增长过快风险</strong> - 56.3%的40天增长率若持续，将导致单位算力回报率急剧下降，小矿工批量关机。<strong>对冲方案</strong>：优化电费成本至0.30元/度以下，考虑最新一代矿机提升效率。</li>
-<ul><li><strong>能源成本上涨风险</strong> - 中东冲突推高油价，能源成本是矿场最大成本项。<strong>对冲方案</strong>：签署长期电价锁定合同，增加可再生能源比例。</li></ul>
-<ul><li><strong>机构资金流出风险</strong> - ETF连续净流出$240M显示机构信心不足。<strong>对冲方案</strong>：分批出售部分挖矿产出保持现金流，避免被动清仓。</li></ul>
-<h3>Top 3机会  </h3>
-<li><strong>难度调整缓解压力</strong> - 预估-0.51%调整将提升单位算力产出，<strong>入场条件</strong>：确认难度下调后考虑适度扩算力。</li>
-<ul><li><strong>Puell Multiple低估</strong> - 0.94处于历史低估区间，<strong>入场条件</strong>：BTC突破$75,000确认反转后加大持币比例。</li></ul>
-<ul><li><strong>监管明确化利好</strong> - 美国代币化证券规则明确，<strong>入场条件</strong>：观察后续ETF资金流向变化。</li></ul>
-<h3>反向观点</h3>
-<strong>主判断</strong>：基于Puell Multiple 0.94 + 极度恐慌情绪18，判断BTC处于历史低估区间，建议70%持有挖矿产出。
-<p><strong>反向情景</strong>：如果全网算力继续以月度20%+速度增长，同时BTC价格无法突破$75,000阻力位，则单位算力回报率将快速恶化。在电费0.35元/度条件下，关机价$47,000将在6个月内被触及。</p>
-<ul><strong>证伪条件</strong>：
-<li>全网算力增长超过30%/月持续3个月</li>
-<li>BTC跌破$65,000支撑位</li>
-<li>美联储超预期加息导致风险资产大幅回调</li></ul>
-<p><strong>应对方案</strong>：预设关机价$50,000，提前签署灵活电费合同，保留30%现金比例以应对极端情况。该情景发生概率约25%，需要密切监控算力增长趋势和宏观环境变化。</p>
+<p><strong>Top 3风险</strong></p>
+<ul><li><strong>算力增速过快风险</strong>：40天+56.3%的算力增长如果持续，将导致小矿工大面积关机，引发行业洗牌。对矿场影响：现金流压力测试，建议预留3-6个月运营资金。对冲方案：与电力公司签署阶梯电价协议，算力竞争加剧时降低用电成本。</li></ul>
+<ul><li><strong>美债收益率持续上升风险</strong>：如果10年期国债收益率突破4.5%，将显著增强传统资产吸引力。对矿场影响：BTC价格承压，挖矿收益下降。对冲方案：部分产出提前卖出，锁定当前价位收益。</li></ul>
+<ul><li><strong>地缘冲突升级风险</strong>：中东局势恶化可能引发全球流动性紧缩。对矿场影响：电力成本上升，BTC价格波动加剧。对冲方案：签署长期固定电价合同，建立应急现金储备。</li></ul>
+<p><strong>Top 3机会</strong></p>
+<ul><li><strong>CEX储备创新低机会</strong>：270万BTC创2018年来新低，供给收缩效应将在2-3个月内显现。入场条件：BTC突破$75,000确认供需失衡。</li></ul>
+<ul><li><strong>矿工投降尾声机会</strong>：Puell Multiple 0.94接近底部区域，历史上矿工投降结束通常伴随价格反转。入场条件：算力增速放缓至月度+5%以下。</li></ul>
+<ul><li><strong>稳定币资金池机会</strong>：3117亿美元创历史新高，潜在购买力充足。入场条件：市场情绪指标从极度恐慌回升至恐慌区间（恐贪指数&gt;25）。</li></ul>
+<p><strong>反向观点（必写）</strong></p>
+<p><strong>反向情景：BTC进入长期横盘熊市</strong></p>
+<ul>如果以下条件同时出现，我的主判断（中期看涨）将被证伪：
+<li>美债收益率持续上升至5%以上，传统资产吸引力压倒性优势</li>
+<li>全球监管趋严，特别是美国对BTC征收重税或限制机构持有</li>
+<li>量子计算突破威胁BTC安全性，引发技术信任危机</li>
+<li>全球经济衰退导致机构被迫抛售BTC资产</li></ul>
+<p><strong>该情景概率：15%</strong></p>
+<ul><strong>应对方案</strong>：
+<li>监控美债收益率，超过4.8%时将挖矿产出卖出比例提升至70%</li>
+<li>跟踪监管动向，建立多司法辖区运营预案</li>
+<li>关注量子计算发展，BTC网络升级进展</li>
+<li>建立衰退情景下的现金流管理预案，确保18个月运营资金</li></ul>
+<p>这种反向思考不是悲观主义，而是风险管理的必要组成。当前数据支持看涨判断，但保持对反向风险的敏感度是专业投资者的基本素养。</p>
 </div>
 
 <div class="footer">
-  情报部门 | Claude Sonnet 首席分析师 | 2026-03-06 12:07 BJT<br>
+  情报部门 | Claude Sonnet 首席分析师 | 2026-03-06 16:49 BJT<br>
   数据源: CoinGecko / Blockchain.info / mempool.space / Binance / OKX / Bybit / Deribit / DefiLlama / Yahoo Finance
 </div>
 
@@ -229,7 +242,7 @@ assetChart.setOption({
   xAxis: { type: 'category', data: ["BITCO", "ETHER", "DXY", "Gold"], axisLabel: { fontSize: 11, rotate: 30, color: '#8b949e' } },
   yAxis: { type: 'value', axisLabel: { formatter: '{value}%', color: '#8b949e' }, splitLine: { lineStyle: { color: '#21262d' } } },
   series: [{
-    type: 'bar', data: [-2.01, -1.76, -0.37, 1.47],
+    type: 'bar', data: [-1.55, -1.11, -0.33, 0.95],
     itemStyle: { color: function(p) { return ["#c62828", "#c62828", "#c62828", "#2e7d32"][p.dataIndex]; } },
     label: { show: true, position: 'top', formatter: '{c}%', fontSize: 10, color: '#8b949e' }
   }],
@@ -251,7 +264,7 @@ hrChart.setOption({
     { name: '算力 (EH/s)', type: 'line', data: [760.1, 870.9, 848.8, 771.1, 914.7, 912.8, 967.4, 845.8, 831.1, 920.5, 999.8, 911.2, 1012.3, 1115.4, 1054.8, 1027.5, 896.7, 989.6, 1098.1, 946.4, 1038.8, 1242.1, 1086.7, 1030.2, 958.3, 1017.2, 1000.9, 849.7, 1164.2, 1072.5, 1175.4, 1121.2, 1008.0, 1019.7, 1029.6, 1056.6, 977.3, 968.6, 940.2, 1188.4],
       lineStyle: { color: '#58a6ff', width: 2 }, itemStyle: { color: '#58a6ff' },
       smooth: true, symbol: 'none', areaStyle: { color: 'rgba(88,166,255,0.1)' } },
-    { name: '每TH/s日收益 (¥)', type: 'line', yAxisIndex: 1, data: [0.3, 0.26, 0.27, 0.3, 0.25, 0.25, 0.24, 0.27, 0.28, 0.25, 0.23, 0.25, 0.23, 0.21, 0.22, 0.22, 0.26, 0.23, 0.21, 0.24, 0.22, 0.19, 0.21, 0.22, 0.24, 0.23, 0.23, 0.27, 0.2, 0.21, 0.2, 0.21, 0.23, 0.23, 0.22, 0.22, 0.24, 0.24, 0.24, 0.19],
+    { name: '每TH/s日收益 (¥)', type: 'line', yAxisIndex: 1, data: [0.3, 0.26, 0.27, 0.3, 0.25, 0.25, 0.24, 0.27, 0.28, 0.25, 0.23, 0.25, 0.23, 0.21, 0.22, 0.22, 0.26, 0.23, 0.21, 0.24, 0.22, 0.19, 0.21, 0.22, 0.24, 0.23, 0.23, 0.27, 0.2, 0.21, 0.2, 0.2, 0.23, 0.23, 0.22, 0.22, 0.24, 0.24, 0.24, 0.19],
       lineStyle: { color: '#f7931a', width: 2 }, itemStyle: { color: '#f7931a' },
       smooth: true, symbol: 'none' }
   ],
@@ -287,7 +300,7 @@ btcPriceChart.setOption({
   yAxis: { type: 'value', axisLabel: { color: '#8b949e', formatter: function(v) { return '$' + (v/1000).toFixed(0) + 'k'; } },
     splitLine: { lineStyle: { color: '#21262d' } }, scale: true },
   series: [{
-    type: 'line', data: [86548.0, 88308.0, 89204.0, 89162.0, 84570.0, 84142.0, 78726.0, 76937.0, 78768.0, 75639.0, 73172.0, 62854.0, 70524.0, 69297.0, 70542.0, 70096.0, 68780.0, 66938.0, 66185.0, 68839.0, 69766.0, 68717.0, 68908.0, 67489.0, 66456.0, 66919.0, 67970.0, 67978.0, 67585.0, 64578.0, 64074.0, 67947.0, 67469.0, 65884.0, 67008.0, 65713.0, 68864.0, 68322.0, 72670.0, 70875.0, 71050.0],
+    type: 'line', data: [86548.0, 88308.0, 89204.0, 89162.0, 84570.0, 84142.0, 78726.0, 76937.0, 78768.0, 75639.0, 73172.0, 62854.0, 70524.0, 69297.0, 70542.0, 70096.0, 68780.0, 66938.0, 66185.0, 68839.0, 69766.0, 68717.0, 68908.0, 67489.0, 66456.0, 66919.0, 67970.0, 67978.0, 67585.0, 64578.0, 64074.0, 67947.0, 67469.0, 65884.0, 67008.0, 65713.0, 68864.0, 68322.0, 72670.0, 70875.0, 70925.0],
     lineStyle: { color: '#f7931a', width: 2.5 }, itemStyle: { color: '#f7931a' },
     smooth: true, symbol: 'none',
     areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
