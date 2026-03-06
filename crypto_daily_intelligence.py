@@ -1532,8 +1532,8 @@ body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC
 .content li {{ margin: 6px 0; color: #c9d1d9; line-height: 1.8; }}
 .content strong {{ color: #f0f6fc; }}
 .content hr {{ border: none; border-top: 1px solid #30363d; margin: 24px 0; }}
-.content table {{ border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }}
-.content th, .content td {{ border: 1px solid #30363d; padding: 8px 12px; text-align: left; }}
+.content table {{ border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; table-layout: fixed; word-break: break-word; }}
+.content th, .content td {{ border: 1px solid #30363d; padding: 8px 12px; text-align: left; overflow: hidden; text-overflow: ellipsis; }}
 .content th {{ background: #161b22; color: #58a6ff; font-weight: 600; }}
 .content td {{ color: #c9d1d9; }}
 .inline-chart {{ background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 20px 0; }}
