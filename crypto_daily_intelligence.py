@@ -1621,7 +1621,7 @@ CHART_SECTION_MAP = {
 </div>''',
     },
     'difficulty_history': {
-        'keywords': ['难度', 'difficulty', '调整', 'adjustment'],
+        'keywords': ['难度', 'difficulty', '调整', 'adjustment', '矿工经济', '矿工'],
         'data_check': lambda d: len(d.get('difficulty_history', [])) > 3,
         'html': '''<div class="inline-chart" aria-label="难度调整历史">
   <div class="chart-label">近期难度调整历史 (变化% + 绝对值T)</div>
@@ -1637,7 +1637,7 @@ CHART_SECTION_MAP = {
 </div>''',
     },
     'miner_revenue': {
-        'keywords': ['矿工收入', 'miner revenue', 'puell', '收入趋势'],
+        'keywords': ['矿工收入', 'miner revenue', 'puell', '收入趋势', '矿工经济', '矿工'],
         'data_check': lambda d: len(d.get('miner_revenue_history', [])) > 3,
         'html': '''<div class="inline-chart" aria-label="矿工收入趋势">
   <div class="chart-label">30天矿工日收入趋势 (USD)</div>
