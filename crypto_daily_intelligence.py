@@ -697,42 +697,32 @@ def collect_historical_charts():
     result = {}
 
     # 1. 90天难度调整历史（mempool.space）
+    # API返回 list of [timestamp, height, difficulty, change_pct]
     da_hist = safe_get('https://mempool.space/api/v1/mining/difficulty-adjustments/90', timeout=15)
+    if not da_hist or not isinstance(da_hist, list):
+        da_hist = safe_get('https://mempool.space/api/v1/mining/difficulty-adjustments', timeout=15)
     if da_hist and isinstance(da_hist, list) and len(da_hist) > 0:
         points = []
         for adj in da_hist[:30]:  # 最近30次调整
-            ts = adj.get('time', 0)
-            diff_change = adj.get('difficultyChange', 0)
-            difficulty = adj.get('difficulty', 0)
+            if isinstance(adj, list) and len(adj) >= 4:
+                ts, _height, difficulty, diff_change = adj[0], adj[1], adj[2], adj[3]
+            elif isinstance(adj, dict):
+                ts = adj.get('time', 0)
+                diff_change = adj.get('difficultyChange', 0)
+                difficulty = adj.get('difficulty', 0)
+            else:
+                continue
             date_str = datetime.fromtimestamp(ts, tz=BJT).strftime('%m-%d') if ts else ''
             points.append({
                 'date': date_str,
-                'change_pct': round(diff_change, 2),
-                'difficulty_t': round(difficulty / 1e12, 2) if difficulty else 0,
+                'change_pct': round((float(diff_change) - 1) * 100, 2) if isinstance(adj, list) else round(float(diff_change), 2),
+                'difficulty_t': round(float(difficulty) / 1e12, 2) if difficulty else 0,
             })
         points.reverse()  # 时间正序
         result['difficulty_history'] = points
         print(f'  [难度调整] {len(points)}个数据点')
     else:
-        # fallback: 尝试不带参数的API
-        da_hist2 = safe_get('https://mempool.space/api/v1/mining/difficulty-adjustments', timeout=15)
-        if da_hist2 and isinstance(da_hist2, list):
-            points = []
-            for adj in da_hist2[:20]:
-                ts = adj.get('time', 0)
-                diff_change = adj.get('difficultyChange', 0)
-                difficulty = adj.get('difficulty', 0)
-                date_str = datetime.fromtimestamp(ts, tz=BJT).strftime('%m-%d') if ts else ''
-                points.append({
-                    'date': date_str,
-                    'change_pct': round(diff_change, 2),
-                    'difficulty_t': round(difficulty / 1e12, 2) if difficulty else 0,
-                })
-            points.reverse()
-            result['difficulty_history'] = points
-            print(f'  [难度调整fallback] {len(points)}个数据点')
-        else:
-            print('  [难度调整] 数据获取失败')
+        print('  [难度调整] 数据获取失败')
 
     time.sleep(1)
 
