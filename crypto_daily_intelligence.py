@@ -2024,8 +2024,13 @@ def main():
         except Exception as e:
             print(f'  ⚠️ 预览HTML生成失败（不影响推送）: {e}')
 
-        # 多条Server酱推送（含图表预览链接）
-        split_and_push(analysis, TODAY_BJT)
+        # Server酱推送（仅main/master分支，feature分支跳过）
+        git_ref = os.environ.get('GITHUB_REF', '')
+        is_main = not git_ref or git_ref in ('refs/heads/main', 'refs/heads/master')
+        if is_main:
+            split_and_push(analysis, TODAY_BJT)
+        else:
+            print(f'  [DRY-RUN] 非主分支({git_ref})，跳过Server酱推送')
 
         # Supabase存档
         data_summary = {
@@ -2043,8 +2048,13 @@ def main():
         }
         save_to_supabase(TODAY_BJT, analysis, data_summary)
     else:
-        from notify import push_serverchan_status
-        push_serverchan_status('加密投研日报', '失败', f'{TODAY_BJT} LLM分析未返回结果，请检查OpenRouter API Key')
+        git_ref = os.environ.get('GITHUB_REF', '')
+        is_main = not git_ref or git_ref in ('refs/heads/main', 'refs/heads/master')
+        if is_main:
+            from notify import push_serverchan_status
+            push_serverchan_status('加密投研日报', '失败', f'{TODAY_BJT} LLM分析未返回结果，请检查OpenRouter API Key')
+        else:
+            print(f'  [DRY-RUN] 非主分支，跳过失败通知')
 
     print('\n=== 完成 ===')
 
