@@ -1676,22 +1676,23 @@ def _build_interleaved_html(report_text, chart_data):
                     charts_used.add(chart_key)
                     result_parts.append(f'<!--CHART:{chart_key}-->')
                     print(f'  [CHART] {chart_key}: matched → "{part.strip()[:40]}"')
-                    break
+                    # 不break，允许多张图表匹配同一章节
 
     # 后处理：将<!--CHART:xxx-->替换为实际图表HTML
-    # 但需要调整位置——chart标记在标题后面，应该在内容后面
+    # chart标记在标题后面，应该在内容后面
     final_parts = []
-    pending_chart = None
+    pending_charts = []
     for part in result_parts:
         if part.startswith('<!--CHART:'):
             chart_key = part.replace('<!--CHART:', '').replace('-->', '')
-            pending_chart = chart_key
+            pending_charts.append(chart_key)
         else:
             final_parts.append(part)
-            if pending_chart:
-                chart_html = CHART_SECTION_MAP[pending_chart]['html']
-                final_parts.append(chart_html)
-                pending_chart = None
+            if pending_charts:
+                for ck in pending_charts:
+                    chart_html = CHART_SECTION_MAP[ck]['html']
+                    final_parts.append(chart_html)
+                pending_charts = []
 
     # 如果有图表一直没匹配到任何章节，追加到末尾
     unused = set(CHART_SECTION_MAP.keys()) - charts_used
