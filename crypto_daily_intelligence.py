@@ -2390,7 +2390,7 @@ def main():
     # 打印数据长度
     print(f'  数据上下文: {len(data_context)} 字符')
 
-    # LLM深度分析（DeepSeek via OpenRouter）
+    # LLM深度分析（Claude Sonnet via Anthropic API）
     analysis = call_llm_analysis(data_context)
 
     if analysis:
