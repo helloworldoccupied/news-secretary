@@ -43,7 +43,7 @@ MODELS = {
     'qwen': 'qwen/qwen3.5-plus-02-15',
     'glm5': 'z-ai/glm-5',
     'gemini': 'google/gemini-3.1-flash-lite-preview',
-    'grok': 'x-ai/grok-4.1-fast',
+    'gpt5': 'openai/gpt-5.4',
 }
 
 
